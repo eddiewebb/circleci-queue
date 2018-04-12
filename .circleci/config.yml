@@ -35,7 +35,18 @@ jobs:
       - image: circleci/python:2-jessie
     steps:
       - checkout
+
+      - setup_remote_docker:   # (2)
+          docker_layer_caching: true # (3)
+
       - run:
-          name: Run Tests
+          name: Test
           command: |
             echo "TODO"
+      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+
+      # build the application image
+      - run: docker build -t eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM .
+
+      # deploy the image
+      - run: docker push eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM   
