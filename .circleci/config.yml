@@ -6,11 +6,6 @@ workflows:
           filters:
             branches:
               ignores: master
-    #  - build:
-     #     filters:
-      #      branches:
-       #       only: master
-
 
 version: 2
 jobs:
