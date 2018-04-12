@@ -31,5 +31,3 @@ class CircleCI:
 
 	def cancel_current(self):
 		r = requests.post(self.cancel_url)
-		print "Cancel response:"
-		print r.text
