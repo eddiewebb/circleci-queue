@@ -1,8 +1,8 @@
 workflows:
   version: 2
-  main:
+  build-deploy:
     jobs:
-      - testing
+      - testing:
           filters:
             branches:
               ignores: master
