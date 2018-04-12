@@ -2,7 +2,7 @@ workflows:
   version: 2
   build-deploy:
     jobs:
-      - testing:
+      - testing
       - build:
           requires: testing
           filters:
