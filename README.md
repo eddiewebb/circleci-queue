@@ -2,9 +2,28 @@
 Docker image or standalone script to block/queue jobs to ensure max concurrency limits
 
 ## Basic Usage
-This adds concurreny limits by ensuring any jobs with this step will only continue once no previous vuilds are running.  It supports a single argument of how many minutes to wait before aborting itself.
+This adds concurreny limits by ensuring any jobs with this step will only continue once no previous builds are running.  It supports a single argument of how many minutes to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY` - which can be created in [account settings](https://circleci.com/account/api).
 
-It requires a single Enviuronment Variable `CIRCLECI_API_KEY` - create one in [account settings](https://circleci.com/account/api) and add it to your project.
+
+## Screenshots / Examples
+Suppose we have a workflow take takes a little while to run.  Normally the build (#18) will run immediately, with no queuing.
+![no queuing if only active build](assets/build_noqueue.png)
+
+Someone else on the team makes another commit, since the first build (#18) is still running, it will queue build #19.
+![no queuing if only active build](assets/build_queue2.png)
+
+It's late afternoon, everyone is pushing their commits in to ensure they are good before they leave for the day. Build #20 also queues.
+![no queuing if only active build](assets/build_queued.png)
+
+Meanwhile, build #19 is now allowed to move forward since build #18 finished.
+
+![no queuing if only active build](assets/build_progressed.png)
+
+Oh No!  Since `1 minute` is abnormally long for things to be queued, build #20 aborts itself, letting build #19 finish uninterupted.
+
+![no queuing if only active build](assets/build_aborted.png)
+
+# Setup
 
 ## Standalone Python use
 You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.py 5`
