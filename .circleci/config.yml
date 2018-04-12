@@ -50,3 +50,4 @@ jobs:
 
       # deploy the image
       - run: docker push eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM   
+      - run: docker push eddiewebb/circleci-queue 

@@ -1,6 +1,8 @@
 # circleci-queue
 Docker image or standalone script to block/queue jobs to ensure max concurrency limits
 
+[![CircleCI](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master.svg?style=svg)](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master)
+
 ## Basic Usage
 This adds concurreny limits by ensuring any jobs with this step will only continue once no previous builds are running.  It supports a single argument of how many minutes to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY` - which can be created in [account settings](https://circleci.com/account/api).
 
