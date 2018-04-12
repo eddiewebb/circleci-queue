@@ -5,7 +5,7 @@ workflows:
       - testing:
           filters:
             branches:
-              ignores: master
+              ignore: master
 
 version: 2
 jobs:
