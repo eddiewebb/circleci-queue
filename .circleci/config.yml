@@ -16,8 +16,6 @@ jobs:
   testing:
     docker:
       - image: circleci/python:2-jessie
-      - image: eddiewebb/circleci-queue:latest
-        command: [queueBuildUntilFrontOfLine, "1"]
     steps:
       - checkout
       - run:
@@ -48,7 +46,7 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
       # build the application image
-      - run: docker build -t eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM -t eddiewebb/circleci-queue:latest .
+      - run: docker build -f Dockerfiles/python_2-jessie -t eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM -t eddiewebb/circleci-queue:latest .
 
       # deploy the image as version, latest and devel
       - run: docker push eddiewebb/circleci-queue
