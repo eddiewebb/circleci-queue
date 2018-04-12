@@ -1,0 +1,40 @@
+workflows:
+  version: 2
+  build-deploy:
+    jobs:
+      - testing:
+      - build:
+          requires: testing
+          filters:
+            branches:
+              only: master
+
+
+version: 2
+jobs:
+  testing:
+    docker:
+      - image: circleci/python:2-jessie
+    steps:
+      - checkout
+      - run:
+          name: Queue Build
+          command: |
+            # wait up to 1 minute for previous builds
+            python src/queueBuildUntilFrontOfLine.py 1
+
+      - run:
+          name: Do Slow Things
+          command: |
+            # This step mimics a slow deployment or other activity to wait for, single concurrency
+            sleep 30 #30 seconds is less than max wait above, so only if we queue many jobs will they start to abort
+
+  build:
+    docker:
+      - image: circleci/python:2-jessie
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: |
+            echo "TODO"
