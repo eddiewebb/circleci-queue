@@ -17,7 +17,7 @@ jobs:
     docker:
       - image: circleci/python:2-jessie
       - image: eddiewebb/circleci-queue:latest
-        command: [queueBuildUntilFrontOfLine, 1]
+        command: [queueBuildUntilFrontOfLine, "1"]
     steps:
       - checkout
       - run:
