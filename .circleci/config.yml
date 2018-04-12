@@ -3,10 +3,8 @@ workflows:
   build-deploy:
     jobs:
       - testing:
-          filters:
-            branches:
-              ignore: master
       - build:
+          requires: testing
           filters:
             branches:
               only: master
@@ -40,4 +38,3 @@ jobs:
           name: Run Tests
           command: |
             echo "TODO"
-            exit 1

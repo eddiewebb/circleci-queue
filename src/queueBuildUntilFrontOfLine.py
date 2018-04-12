@@ -36,7 +36,7 @@ while True:
 	if wait_time >= (max_time * 60):
 		print "Max wait time exceeded, cancelling this build."
 		api.cancel_current()
-		sleep(60) #waut for APi to cancel this job, rather than showiung as failure
+		time.sleep(60) #waut for APi to cancel this job, rather than showiung as failure
 		exit(1) # but just in case, fail job
 
 	time.sleep(loop_time)

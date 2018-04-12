@@ -21,7 +21,6 @@ class CircleCI:
 
 	def oldest_running_build_num(self):
 		r = requests.get(self.api_url)
-		print r.text
 		build_summary = r.json()
 		if len(build_summary) == 1:
 			return build_summary[0]['build_num']
