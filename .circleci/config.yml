@@ -6,6 +6,10 @@ workflows:
           filters:
             branches:
               ignore: master
+      - build:
+          filters:
+            branches:
+              only: master
 
 version: 2
 jobs:
@@ -25,3 +29,14 @@ jobs:
           command: |
             # This step mimics a slow deployment or other activity to wait for, single concurrency
             sleep 30 #30 seconds is less than max wait above, so only if we queue many jobs will they start to abort
+
+  build:
+    docker:
+      - image: circleci/python:2-jessie
+    steps:
+      - checkout
+      - run:
+          name: Run Tests
+          command: |
+            echo "TODO"
+            exit 1
