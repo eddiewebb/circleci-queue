@@ -23,7 +23,7 @@ loop_time=30
 max_time_seconds=$((max_time * 60))
 while true; do
 
-	oldest_running_build_num=`load_oldest_running_build_num`
+	load_oldest_running_build_num
 	if [ ${CIRCLE_BUILD_NUM} -le $oldest_running_build_num ]; then
 		echo "Front of the line, WooHoo!, Build continuing"
 		break

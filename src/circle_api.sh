@@ -1,4 +1,4 @@
-
+#!/bin/bash
 
 VCS_TYPE="github"
 if [[ *"bitbucket"* = repo_url ]]; then
@@ -11,10 +11,15 @@ load_oldest_running_build_num(){
 	
 	#negative index grabs last (oldest) job in returned results.
 	oldest=`curl -s $jobs_api_url_template | jq '.[-1].build_num'`
-	if [ -z "$oldest" ];then
-		echo $CIRCLE_BUILD_NUM
+	if [ -z $oldest ];then
+		echo "API Call for existing jobs failed, failing this build.  Please check API token"
+		exit 1
+	elif [ "null" == "$oldest" ];then
+		echo "No running builds found, this is likely a bug in queue script"
+		exit 1
 	else
-		echo $oldest
+		echo "Setting oldest running build to : ${oldest_running_build_num}"
+		oldest_running_build_num=$oldest
 	fi
 }
 
