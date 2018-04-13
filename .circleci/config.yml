@@ -22,7 +22,7 @@ jobs:
           name: Queue Build
           command: |
             # wait up to 1 minute for previous builds
-            python src/queueBuildUntilFrontOfLine.py 1
+            bash src/queueBuildUntilFrontOfLine.sh 1
 
       - run:
           name: Do Slow Things
@@ -46,7 +46,10 @@ jobs:
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
 
       # build the application image
-      - run: docker build -f Dockerfiles/python_2-jessie -t eddiewebb/circleci-queue:build-$CIRCLE_BUILD_NUM -t eddiewebb/circleci-queue:latest .
-
-      # deploy the image as version, latest and devel
-      - run: docker push eddiewebb/circleci-queue
+      - run: 
+          name: Docker Builds
+          command: |
+            docker build -f Dockerfiles/python_2-jessie -t eddiewebb/circleci-python-queue:2-jessie .
+            docker push eddiewebb/circleci-python-queue:2-jessie
+            docker build -f Dockerfiles/python_2-jessie -t eddiewebb/circleci-openjdk-queue:8-jdk-browsers .
+            docker push eddiewebb/circleci-openjdk-queue:8-jdk-browsers
