@@ -1,16 +1,10 @@
 FROM circleci/openjdk:8-jdk-browsers
 
-MAINTAINER Edward A. Webb <olli
-
-USER circleci
-
+MAINTAINER Edward A. Webb <ollitech@gmail.com>
 
 # Add our custom shipit scripts
 COPY src /home/circleci/circleci-queue
 ENV QUEUE_HOME /home/circleci/circleci-queue
-RUN sudo chown circleci /home/circleci/circleci-queue
-RUN sudo ln -s $QUEUE_HOME/queueBuildUntilFrontOfLine.py /usr/local/bin/queueBuildUntilFrontOfLine
-
-
-# Non Python docker builds need requests
-COPY lib/requests /home/circleci/circleci-queue/requests
+run sudo chown -R circleci /home/circleci/circleci-queue
+run chmod -R a+x /home/circleci/circleci-queue
+RUN sudo ln -s $QUEUE_HOME/queueBuildUntilFrontOfLine.sh /usr/local/bin/queueBuildUntilFrontOfLine
