@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 import sys
 import time
-import circleci
-import environment
+from mymodules import circleci
+from mymodules import environment
 
 
 circleci_key = environment.loadOrExit('CIRCLECI_API_KEY')
