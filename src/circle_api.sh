@@ -18,7 +18,6 @@ load_oldest_running_build_num(){
 		echo "No running builds found, this is likely a bug in queue script"
 		exit 1
 	else
-		echo "Setting oldest running build to : ${oldest_running_build_num}"
 		oldest_running_build_num=$oldest
 	fi
 }
@@ -27,7 +26,7 @@ load_oldest_running_build_num(){
 cancel_current_build(){
 	echo "Cancelleing build ${CIRCLE_BUILD_NUM}"
 	cancel_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${CIRCLECI_API_KEY}"
-	curl -X POST $cancel_api_url_template
+	curl -s -X POST $cancel_api_url_template > /dev/null
 }
 
 
