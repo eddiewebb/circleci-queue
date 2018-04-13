@@ -56,7 +56,15 @@ jobs:
 ```
 
 ## Docker image
-To get the latest and greatest without fuss, you can use the provided docker image `eddiewebb/circleci-queue` as the job image, and invoke `queueBuildUntilFrontOfLine. 5`
+
+### Replace current image 
+To get the latest and greatest without fuss, you can use the provided docker image based on your lnaguage need. Many images supported, add more to [.circleci/images.txt] to add more.
+
+`circleci/node:4-stretch-browsers ` ==> `eddiewebb/queue-circleci-node:4-stretch-browsers`  
+
+Browse https://hub.docker.com/u/eddiewebb/ for all.
+
+`queueBuildUntilFrontOfLine. 5`
 Sample partial `.circleci/config.yml`
 ```
 jobs:

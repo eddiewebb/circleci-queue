@@ -1,0 +1,3 @@
+circleci/python:2-jessie
+circleci/openjdk:8-jdk-browsers
+circleci/node:4-stretch-browsers

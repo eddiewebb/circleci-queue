@@ -49,7 +49,6 @@ jobs:
       - run: 
           name: Docker Builds
           command: |
-            docker build -f Dockerfiles/python_2-jessie -t eddiewebb/circleci-python-queue:2-jessie .
-            docker push eddiewebb/circleci-python-queue:2-jessie
-            docker build -f Dockerfiles/openjdk_8-jdk-browsers -t eddiewebb/circleci-openjdk-queue:8-jdk-browsers .
-            docker push eddiewebb/circleci-openjdk-queue:8-jdk-browsers
+            echo "Building quued version of all images in images.txt"
+            cat .circleci/images.txt
+            bash .circleci/buildConvienceImages.sh

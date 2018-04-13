@@ -1,4 +1,4 @@
-FROM circleci/openjdk:8-jdk-browsers
+FROM REPLACEMEWITHIMAGE
 
 MAINTAINER Edward A. Webb <ollitech@gmail.com>
 
