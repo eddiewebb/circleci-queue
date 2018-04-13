@@ -22,7 +22,7 @@ jobs:
           name: Queue Build
           command: |
             # wait up to 1 minute for previous builds
-            python src/queueBuildUntilFrontOfLine.py 1
+            bash src/queueBuildUntilFrontOfLine.sh 1
 
       - run:
           name: Do Slow Things
