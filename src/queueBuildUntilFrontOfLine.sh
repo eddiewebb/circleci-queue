@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # just confirm our required variables are present
 : ${CIRCLECI_API_KEY:?"Required Env Variable not found!"}
 : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
