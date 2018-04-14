@@ -6,6 +6,7 @@
 : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
 : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
 : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
+# CIRCLE_JOB is optional: ${CIRCLE_JOB:?"Required Env Variable not found!"}
 
 
 if [ -z "$1" ]; then
@@ -16,7 +17,7 @@ max_time=$1
 echo "This build will block until all previous builds complete."
 echo "Max Queue Time: ${max_time} minutes."
 
-my_dir="$(dirname "$(readlink -f "$0")")"
+my_dir="$(cd "$(dirname "$0")" && pwd)"
 source "${my_dir}/circle_api.sh"
 wait_time=0
 loop_time=30
@@ -39,7 +40,6 @@ while true; do
 		exit 1 # but just in case, fail job
 	fi
 
-	sleep $loop_time 
+	sleep $loop_time
 	wait_time=$(( loop_time + wait_time ))
 done
-
