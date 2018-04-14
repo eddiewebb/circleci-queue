@@ -15,7 +15,7 @@ load_oldest_running_build_num(){
 		oldest=`curl -s $jobs_api_url_template | jq '.[-1].build_num'`
 	else
 		echo "Only blocking for runnin jobs matching: ${CIRCLE_JOB}"
-		oldest=`curl -s $jobs_api_url_template | jq '. | map(select(.build_parameters.CIRCLE_JOB=="deploy-cf")) | .[-1].build_num'`
+		oldest=`curl -s $jobs_api_url_template | jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | .[-1].build_num"`
 	fi
 	if [ -z $oldest ];then
 		echo "API Call for existing jobs failed, failing this build.  Please check API token"
