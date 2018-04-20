@@ -17,7 +17,7 @@ max_time=$1
 echo "This build will block until all previous builds complete."
 echo "Max Queue Time: ${max_time} minutes."
 
-my_dir="$(cd "$(dirname "$0")" && pwd -P)"
+my_dir="$(dirname "$(readlink -f "$0")")"
 source "${my_dir}/circle_api.sh"
 wait_time=0
 loop_time=30
