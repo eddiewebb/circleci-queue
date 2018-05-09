@@ -33,7 +33,7 @@ Oh No!  Since `1 minute` is abnormally long for things to be queued, build #20 a
 ## Standalone Python use
 You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.py 5`
 
-**IMage must provide python**
+**Image must provide python**
 Sample partial `.circleci/config.yml`
 ```
 jobs:
