@@ -30,8 +30,8 @@ Oh No!  Since `1 minute` is abnormally long for things to be queued, build #20 a
 
 # Setup
 
-## Standalone Python use
-You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.py 5`
+## Standalone use
+You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.sh 5`
 
 **Image must provide python**
 Sample partial `.circleci/config.yml`
@@ -39,14 +39,14 @@ Sample partial `.circleci/config.yml`
 jobs:
   testing:
     docker:
-      - image: circleci/python:2-jessie  # any image with python 2
+      - image: circleci/python:2-jessie
     steps:
       - checkout
       - run:
           name: Queue Build
           command: |
             # wait up to 10 minute for previous builds
-            python src/queueBuildUntilFrontOfLine.py 10
+            python src/queueBuildUntilFrontOfLine.sh 10
 
       - run:
           name: Do Regular Things
