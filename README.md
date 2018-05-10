@@ -33,7 +33,6 @@ Oh No!  Since `1 minute` is abnormally long for things to be queued, build #20 a
 ## Standalone use
 You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.sh 5`
 
-**Image must provide python**
 Sample partial `.circleci/config.yml`
 ```
 jobs:
@@ -46,7 +45,7 @@ jobs:
           name: Queue Build
           command: |
             # wait up to 10 minute for previous builds
-            python src/queueBuildUntilFrontOfLine.sh 10
+            sh src/queueBuildUntilFrontOfLine.sh 10
 
       - run:
           name: Do Regular Things
