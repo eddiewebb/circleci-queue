@@ -8,7 +8,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: circleci/python:2-jessie
+      - image: circleci/buildpack-deps:latest-dind
     steps:
       - checkout
       # build the application image
