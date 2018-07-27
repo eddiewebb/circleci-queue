@@ -2,67 +2,15 @@ workflows:
   version: 2
   build-deploy:
     jobs:
-      - testing-1:
-          filters:
-            branches:
-              ignore: master
-      - testing-2:
-          requires:
-            - testing-1
-          filters:
-            branches:
-              ignore: master
-      - build:
-          filters:
-            branches:
-              only: master
-
+      - build
 
 version: 2
 jobs:
-  testing-1:
-    docker:
-      - image: circleci/python:2-jessie
-    steps:
-      - checkout
-      - run:
-          name: Do Slow Things
-          command: |
-            # This step mimics a slow deployment or other activity but not in the same job we need to be single occurence
-            sleep 30 #30 seconds is less than max wait above
-
-  testing-2:
-    docker:
-      - image: circleci/python:2-jessie
-    steps:
-      - checkout
-      - run:
-          name: Queue Build
-          command: |
-            # wait up to 1 minute for previous builds if job 'testing-2' is still running
-            bash src/queueBuildUntilFrontOfLine.sh 1
-
-      - run:
-          name: Do Slow Things
-          command: |
-            # This step mimics a slow deployment or other activity to wait for, single concurrency
-            sleep 30 #30 seconds is less than max wait above, so only if we queue many jobs will they start to abort
-
   build:
     docker:
       - image: circleci/python:2-jessie
     steps:
       - checkout
-
-      - setup_remote_docker:   # (2)
-          docker_layer_caching: true # (3)
-
-      - run:
-          name: Test
-          command: |
-            echo "TODO"
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-
       # build the application image
       - run:
           name: Docker Builds

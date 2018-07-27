@@ -11,7 +11,7 @@ while read IMAGETAG;do
 	OUR_TAG="eddiewebb/queue-${IMAGETAG/\//-}"
 	echo "Building image ${OUR_TAG} from ${IMAGETAG} "
 	docker build -f tempDockerfile -t ${OUR_TAG} .
-	docker push ${OUR_TAG}
+	#docker push ${OUR_TAG}
 done < .circleci/images.txt
 
 
