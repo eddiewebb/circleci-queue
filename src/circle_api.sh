@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VCS_TYPE="github"
-if [[ *"bitbucket"* = repo_url ]]; then
-	VCS_TYPE = "bitbucket"
+# Default to github, but allow this to be overriden.
+if [ -z $VCS_TYPE ]; then
+	VCS_TYPE="github"
 fi
 
 load_oldest_running_build_num(){
