@@ -12,12 +12,6 @@ workflows:
           filters:
             branches:
               only: master
-      - smoke-test:
-          requires:
-            - publish
-          filters:
-            branches:
-              only: master
 
 version: 2
 jobs:
