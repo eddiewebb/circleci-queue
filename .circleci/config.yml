@@ -2,19 +2,93 @@ workflows:
   version: 2
   build-deploy:
     jobs:
-      - build
+      - test-locally
+      - test-dev:
+          requires:
+            - test-locally
+      - publish:
+          requires:
+            - test-dev
+          filters:
+            branches:
+              only: master
+      - smoke-test:
+          requires:
+            - publish
+          filters:
+            branches:
+              only: master
 
 version: 2
 jobs:
-  build:
+
+  orb-test:
     docker:
-      - image: circleci/buildpack-deps:latest-dind
+      - image: circleci/node:10
+    working_directory: ~/repo
     steps:
       - checkout
-      # build the application image
+      - install-circleci
       - run:
-          name: Docker Builds
+          name: Pack and Validate
           command: |
-            echo "Building quued version of all images in images.txt"
-            cat .circleci/images.txt
-            bash .circleci/buildConvienceImages.sh
+            circleci config pack src/ > packed.yml
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+      - install-bats
+      - run:
+          name: Inline Tests using BATS
+          command: |
+            bats test
+
+  publish:
+    machine: true
+    working_directory: ~/repo
+    steps:
+      - checkout
+      - install-circleci
+      - run:
+          name: Publish prod
+          command: |
+            circleci config pack src/ > packed.yml
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+            circleci orb publish packed.yml eddiewebb/queue@1.0.${CIRCLE_BUILD_NUM} --token ${CIRCLECI_API_KEY}
+      - install-bats
+      - run:
+          name: Import Tests using BATS
+          command: |
+            export BATS_IMPORT_DEV_ORB="eddiewebb/queue@1.0.${CIRCLE_BUILD_NUM}"
+            bats tests
+
+  
+
+
+
+commands:
+  install-bats:
+    description: installs the BATS bash testing tool
+    steps:
+      - run:      
+          name: Install BATS (bash testing)
+          command: |
+            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
+            sudo ./install.sh /usr/local
+      - run:
+          name: Install YQ
+          command: |
+            curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
+            chmod a+x yq
+            sudo mv yq /usr/local/bin/
+  install-circleci:
+    description: installs the new CIrcleCI CLI with orb support
+    steps:
+      - run: 
+          name: Install CircleCI CLI (the new one)
+          command: |
+            curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
+            circleci version
+            echo "Run circleci help"              
+            circleci help
+            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
+
+
+

@@ -5,10 +5,10 @@
   "build_num" : 2,
   "branch" : "master",
   "build_parameters":{
-    "CIRCLE_JOB":"deploy-cf"
+    "CIRCLE_JOB":"singlejob"
   },
   "workflows" : {
-    "job_name" : "build",
+    "job_name" : "singlejob",
     "job_id" : "random-hash-2",
     "workflow_id" : "ec6172d3-b286-4d3a-a1da-c4efba0a0c05",
     "workspace_id" : "a1892dee-6e9e-4f2e-adbc-a5629a97b483",
@@ -24,30 +24,11 @@
   "build_num" : 1,
   "branch" : "master",
   "build_parameters":{
-    "CIRCLE_JOB":"deploy-cf"
+    "CIRCLE_JOB":"adifferentjob"
   },
   "workflows" : {
-    "job_name" : "deploy-cf",
+    "job_name" : "adifferentjob",
     "job_id" : "random-hash-2",
-    "workflow_id" : "ec6172d3-b286-4d3a-a1da-c4efba0a0c05",
-    "workspace_id" : "a1892dee-6e9e-4f2e-adbc-a5629a97b483",
-    "upstream_job_ids" : [ ],
-    "upstream_concurrency_map" : { },
-    "workflow_name" : "build-deploy"
-  },
-  "status" : "running"
-},
-
-{
-  "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
-  "build_num" : 1,
-  "branch" : "master",
-  "build_parameters":{
-    "CIRCLE_JOB":"deploy-heroku"
-  },
-  "workflows" : {
-    "job_name" : "deploy-heroku",
-    "job_id" : "random-hash-1",
     "workflow_id" : "ec6172d3-b286-4d3a-a1da-c4efba0a0c05",
     "workspace_id" : "a1892dee-6e9e-4f2e-adbc-a5629a97b483",
     "upstream_job_ids" : [ ],

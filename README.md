@@ -1,5 +1,5 @@
-# circleci-queue
-Docker image or standalone script to block/queue jobs to ensure max concurrency limits
+# CircleCI Concurrency Control Orb
+CircleCI Orb to limit workflow concurrency.
 
 WHy?  Some jobs (typically deployments) need to run sequentially and not parrellel, but also run to completion. So CircleCI's native `auto-cancel` is not quite the right fit.
 See https://github.com/eddiewebb/circleci-challenge as an example using blue/green cloud foundry deployments.
@@ -30,61 +30,24 @@ Oh No!  Since `1 minute` is abnormally long for things to be queued, build #20 a
 
 # Setup
 
-## Standalone Python use
-You can use this in any docker image by including the files found in [src](src) and executing the entry script `queueBuildUntilFrontOfLine.py 5`
-
-**IMage must provide python**
-Sample partial `.circleci/config.yml`
 ```
+version: 2.1
+  orbs:
+    queue: eddiewebb/queue@volatile
+
 jobs:
-  testing:
-    docker:
-      - image: circleci/python:2-jessie  # any image with python 2
-    steps:
-      - checkout
-      - run:
-          name: Queue Build
-          command: |
-            # wait up to 10 minute for previous builds
-            python src/queueBuildUntilFrontOfLine.py 10
-
-      - run:
-          name: Do Regular Things
-          command: |
-            # Do your deployments, testring, etc, whatever should run with single concurrnecy across all builds
-
-```
-
-## Docker image
-
-### Replace current image 
-To get the latest and greatest without fuss, you can use the provided docker image based on your lnaguage need. Many images supported, add more to [.circleci/images.txt] to add more.
-
-`circleci/node:4-stretch-browsers ` ==> `eddiewebb/queue-circleci-node:4-stretch-browsers`  
-
-Browse https://hub.docker.com/u/eddiewebb/ for all.
-
-`queueBuildUntilFrontOfLine. 5`
-Sample partial `.circleci/config.yml`
-```
-jobs:
-  queue:
+  some-job:
     docker:
       - image: eddiewebb/circleci-queue:latest  
     steps:
+      - queue/until_front_of_line:
+          time: 10 # max wait, in minutes (defautl 10)
+          consider-job: true #only block for this job or anyrunning builds in this project?
+          consider-branch: true #only block of running job is on same branch (drefaut true)
+          dont-quit: If max-time is exceeded, this option will allow the build to proceed.
+
       - checkout
-      - run:
-          name: Queue Build
-          command: |
-            # wait up to 10 minute for previous builds
-            queueBuildUntilFrontOfLine 10
-  build:
-    docker:
-      - image: Someother/image:tag
-    steps:
-      - run:
-          name: Do Regular Things
-          command: |
-            # Do your deployments, testring, etc, whatever should run with single concurrnecy across all builds
+      - ...   #your commands
+ 
 
 ```

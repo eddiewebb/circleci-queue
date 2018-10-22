@@ -1,0 +1,2 @@
+version: 2.1
+description: Blocks the current job until no previous occurences of same job are running on this branch.
