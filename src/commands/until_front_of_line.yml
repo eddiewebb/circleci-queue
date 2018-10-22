@@ -46,23 +46,23 @@ steps:
           echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
           jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${CIRCLECI_API_KEY}&filter=running"
         else
-          echo "Only blocking execution if running previous jobs matching: ${CIRCLE_BRANCH}"
+          echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
           jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?circle-token=${CIRCLECI_API_KEY}&filter=running"
         fi
 
 
 
         load_oldest_running_build_num(){
-          curl -s $jobs_api_url_template > jobstatus.json
-          if [ -f $TESTING_MOCK_RESPONSE ];then cat $TESTING_MOCK_RESPONSE > jobstatus.json; fi
+          curl -s $jobs_api_url_template > /tmp/jobstatus.json
+          if [ -f $TESTING_MOCK_RESPONSE ];then cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json; fi
 
           #negative index grabs last (oldest) job in returned results.
           if [ "<<parameters.consider-job>>" != "true" ];then
             echo "Orb parameter 'consider-job' is false, will block for any running jobs in this workflow."
-            oldest=`jq '.[-1].build_num' jobstatus.json`
+            oldest=`jq '.[-1].build_num' /tmp/jobstatus.json`
           else
             echo "Only blocking execution if running previous jobs matching: ${CIRCLE_JOB}"
-            oldest=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | .[-1].build_num" jobstatus.json`
+            oldest=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | .[-1].build_num" /tmp/jobstatus.json`
           fi
           echo "Oldest job: $oldest"
           if [ -z $oldest ];then
@@ -104,10 +104,15 @@ steps:
           fi
 
           if [ $wait_time -ge $max_time_seconds ]; then
-            echo "Max wait time exceeded, cancelling this build."
-            cancel_current_build
-            sleep 10 #waut for APi to cancel this job, rather than showing as failure
-            exit 1 # but just in case, fail job
+            echo "Max wait time exceeded, considering response."
+            if [ "<<parameters.dont-quit>>" == "true" ];then
+              echo "Orb parameter dont-quit is set to true, letting this job proceed!"
+              exit 0
+            else
+              cancel_current_build
+              sleep 10 #waut for APi to cancel this job, rather than showing as failure
+              exit 1 # but just in case, fail job
+            fi
           fi
 
           sleep $loop_time
