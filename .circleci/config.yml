@@ -3,20 +3,16 @@ workflows:
   build-deploy:
     jobs:
       - test-locally
-      - test-dev:
-          requires:
-            - test-locally
       - publish:
           requires:
-            - test-dev
+            - test-locally
           filters:
             branches:
               only: master
 
 version: 2
 jobs:
-
-  orb-test:
+  test-locally:
     docker:
       - image: circleci/node:10
     working_directory: ~/repo
