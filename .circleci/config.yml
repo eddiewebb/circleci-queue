@@ -31,7 +31,8 @@ jobs:
             bats test
 
   publish:
-    machine: true
+    docker:
+      - image: circleci/node:10
     working_directory: ~/repo
     steps:
       - checkout
@@ -47,7 +48,7 @@ jobs:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/queue@1.0.${CIRCLE_BUILD_NUM}"
-            bats tests
+            bats test
 
   
 
