@@ -1,0 +1,12 @@
+jobs:
+  build:
+    docker:
+      - image: circleci/node:10
+    working_directory: ~/repo
+    steps:
+      - queue/until_front_of_line:
+          # non-defaults for each paramter
+          time: "1"
+          consider-branch: false
+          consider-job: false
+          dont-quit: true

@@ -1,72 +1,84 @@
+
+version: 2.1
 workflows:
-  version: 2
   build-deploy:
     jobs:
-      - testing-1:
-          filters:
-            branches:
-              ignore: master
-      - testing-2:
+      - test-locally
+      - publish:
           requires:
-            - testing-1
-          filters:
-            branches:
-              ignore: master
-      - build:
+            - test-locally
           filters:
             branches:
               only: master
 
-
-version: 2
 jobs:
-  testing-1:
+  test-locally:
     docker:
-      - image: circleci/python:2-jessie
+      - image: circleci/node:10
+    working_directory: ~/repo
     steps:
       - checkout
+      - install-circleci
       - run:
-          name: Do Slow Things
+          name: Pack and Validate
           command: |
-            # This step mimics a slow deployment or other activity but not in the same job we need to be single occurence
-            sleep 30 #30 seconds is less than max wait above
+            circleci config pack src/ > packed.yml
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+      - install-bats
+      - run:
+          name: Inline Tests using BATS
+          command: |
+            bats test
 
-  testing-2:
-    docker:
-      - image: circleci/python:2-jessie
+  publish:
+    machine: true
+    working_directory: ~/repo
     steps:
       - checkout
+      - install-circleci
       - run:
-          name: Queue Build
+          name: Publish prod
           command: |
-            # wait up to 1 minute for previous builds if job 'testing-2' is still running
-            bash src/queueBuildUntilFrontOfLine.sh 1
-
+            circleci config pack src/ > packed.yml
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+            circleci orb publish packed.yml eddiewebb/queue@1.0.${CIRCLE_BUILD_NUM} --token ${CIRCLECI_API_KEY}
+      - install-bats
       - run:
-          name: Do Slow Things
+          name: Import Tests using BATS
           command: |
-            # This step mimics a slow deployment or other activity to wait for, single concurrency
-            sleep 30 #30 seconds is less than max wait above, so only if we queue many jobs will they start to abort
+            export BATS_IMPORT_DEV_ORB="eddiewebb/queue@1.0.${CIRCLE_BUILD_NUM}"
+            bats tests
 
-  build:
-    docker:
-      - image: circleci/python:2-jessie
+  
+
+
+
+commands:
+  install-bats:
+    description: installs the BATS bash testing tool
     steps:
-      - checkout
-
-      - setup_remote_docker:   # (2)
-          docker_layer_caching: true # (3)
-
-      - run:
-          name: Test
+      - run:      
+          name: Install BATS (bash testing)
           command: |
-            echo "TODO"
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-
-      # build the application image
+            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
+            sudo ./install.sh /usr/local
       - run:
-          name: Docker Builds
+          name: Install YQ
           command: |
-            echo "Building quued version of all images in images.txt"
-            cat .circleci/images.txt
-            bash .circleci/buildConvienceImages.sh
+            curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
+            chmod a+x yq
+            sudo mv yq /usr/local/bin/
+  install-circleci:
+    description: installs the new CIrcleCI CLI with orb support
+    steps:
+      - run: 
+          name: Install CircleCI CLI (the new one)
+          command: |
+            curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
+            circleci version
+            echo "Run circleci help"              
+            circleci help
+            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
+
+
+

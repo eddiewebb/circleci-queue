@@ -1,0 +1,6 @@
+workflows:
+  single_file:
+    jobs:
+      - queue/block_workflow:
+          name: "Single File"
+          time: "1"

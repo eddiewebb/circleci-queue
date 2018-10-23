@@ -1,0 +1,26 @@
+parameters:
+  consider-branch:
+    type: boolean
+    default: true
+    description: "Should we only consider jobs running on the same branch?"
+  consider-job:
+    type: boolean
+    # this is false for job level, as the intention is to make sure no previous workfllws are running
+    default: false
+    description: "Should we only consider occurences of this job (otherwise entire workflow is restricted)?"
+  time:
+    type: string
+    default: "10"
+    description: "How long to wait before giving up."
+  dont-quit:
+    type: boolean
+    default: false
+    description: "Quiting is for losers. Force job through once time expires instead of failing."
+docker: 
+  - image: circleci/node:10 #its just really popular, and therefore fast (cached)
+steps:
+  - until_front_of_line:
+      consider-branch: <<parameters.consider-branch>>
+      consider-job: <<parameters.consider-job>>
+      time: <<parameters.time>>
+      dont-quit: <<parameters.dont-quit>>
