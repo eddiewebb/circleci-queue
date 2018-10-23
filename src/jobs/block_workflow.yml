@@ -19,7 +19,7 @@ parameters:
 docker: 
   - image: circleci/node:10 #its just really popular, and therefore fast (cached)
 steps:
-  - queue:
+  - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
       consider-job: <<parameters.consider-job>>
       time: <<parameters.time>>

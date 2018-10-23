@@ -16,6 +16,17 @@ function setup {
 }
 
 
+@test "Job: full job expands properly" {
+  # given
+  process_config_with test/inputs/fulljob.yml
+  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
+
+}
+
 
 @test "Command: Input parameters are respected by command" {
   # given
@@ -224,5 +235,11 @@ function setup {
   assert_contains_text "Max wait time exceeded"
 
 }
+
+
+
+
+
+
 
 
