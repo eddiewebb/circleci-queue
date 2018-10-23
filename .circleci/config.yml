@@ -1,5 +1,6 @@
+
+version: 2.1
 workflows:
-  version: 2
   build-deploy:
     jobs:
       - test-locally
@@ -10,7 +11,6 @@ workflows:
             branches:
               only: master
 
-version: 2
 jobs:
   test-locally:
     docker:
