@@ -16,7 +16,11 @@ parameters:
     type: boolean
     default: false
     description: "Quiting is for losers. Force job through once time expires instead of failing."
-docker: 
+  only-on-branch:
+    type: string
+    default: "*"
+    description: "Only queue on specified branch"
+docker:
   - image: circleci/node:10 #its just really popular, and therefore fast (cached)
 steps:
   - until_front_of_line:
@@ -24,3 +28,4 @@ steps:
       consider-job: <<parameters.consider-job>>
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
+      only-on-branch: <<parameters.only-on-branch>>
