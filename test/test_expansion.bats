@@ -60,6 +60,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -86,6 +87,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -111,6 +113,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -137,6 +140,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -177,6 +181,32 @@ function setup {
 }
 
 
+@test "Command: script will skip queueing on branches that don't match filter" {
+  # given
+  process_config_with test/inputs/command-filter-branch.yml
+  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json #Response shouldn't matter as we're ending early
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLECI_API_KEY="madethisup"
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_BRANCH="dev"
+  export CIRCLE_JOB="singlejob"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Queueing only happens on master, skipping queue"
+  assert_text_not_found "Max Queue Time: 1 minutes"
+  [[ "$status" == "0" ]]
+
+}
 
 @test "Command: script will consider branch default" {
   # given
@@ -199,6 +229,7 @@ function setup {
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
+  assert_contains_text "${CIRCLE_BRANCH} queueable"
   assert_contains_text "Max Queue Time: 1 minutes"
   assert_contains_text "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
@@ -228,6 +259,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 

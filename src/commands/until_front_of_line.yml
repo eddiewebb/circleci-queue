@@ -40,10 +40,10 @@ steps:
         QUEUE_BRUTE=[ "<<parameters.dont-quit>>" == "true" ]
         QUEUE_ONLY=<<parameters.only-on-branch>>
 
-        if [ $QUEUE_ONLY -eq "*" ] ||  [ $QUEUE_ONLY -eq $CIRCLE_BRANCH ]; then
+        if [ "$QUEUE_ONLY" = "*" ] || [ "$QUEUE_ONLY" = "${CIRCLE_BRANCH}" ]; then
           echo "${CIRCLE_BRANCH} queueable"
         else
-          echo "Queueing only happens on ${QUEUE_ONLY}, proceeding"
+          echo "Queueing only happens on ${QUEUE_ONLY}, skipping queue"
           exit 0
         fi
 
