@@ -24,10 +24,12 @@ jobs:
           command: |
             circleci config pack src/ > packed.yml
             circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+            circleci orb publish packed.yml eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}
       - install-bats
       - run:
-          name: Inline Tests using BATS
+          name: Import Tests using BATS
           command: |
+            export BATS_IMPORT_DEV_ORB="eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
             bats test
 
   publish:
@@ -38,21 +40,9 @@ jobs:
       - checkout
       - install-circleci
       - run:
-          name: Publish prod
-          command: |
-            circleci config pack src/ > packed.yml
-            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
-            circleci orb publish packed.yml eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}
-      - install-bats
-      - run:
-          name: Import Tests using BATS
-          command: |
-            export BATS_IMPORT_DEV_ORB="eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
-            bats test
-      - run:
           name: Promote to prod
           command: |
-            circleci orb publish promote eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} patch --token ${CIRCLE_API_TOKEN}
+            circleci orb publish promote eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} patch --token ${CIRCLECI_API_KEY}
 
   
 
