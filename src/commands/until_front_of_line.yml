@@ -34,16 +34,11 @@ steps:
         : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
 
 
-        QUEUE_BRANCH=[ "<<parameters.consider-branch>>" == "true" ]
-        QUEUE_JOB=[ "<<parameters.consider-job>>" == "true" ]
-        QUEUE_TIME=<<parameters.time>>
-        QUEUE_BRUTE=[ "<<parameters.dont-quit>>" == "true" ]
-        QUEUE_ONLY=<<parameters.only-on-branch>>
 
-        if [ "$QUEUE_ONLY" = "*" ] || [ "$QUEUE_ONLY" = "${CIRCLE_BRANCH}" ]; then
+        if [ "<<parameters.only-on-branch>>" = "*" ] || [ "<<parameters.only-on-branch>>" = "${CIRCLE_BRANCH}" ]; then
           echo "${CIRCLE_BRANCH} queueable"
         else
-          echo "Queueing only happens on ${QUEUE_ONLY}, skipping queue"
+          echo "Queueing only happens on <<parameters.only-on-branch>> branch, skipping queue"
           exit 0
         fi
 
@@ -96,7 +91,7 @@ steps:
 
 
 
-        max_time=${QUEUE_TIME}
+        max_time=<<parameters.time>>
         echo "This build will block until all previous builds complete."
         echo "Max Queue Time: ${max_time} minutes."
 
