@@ -24,8 +24,8 @@ steps:
   - run:
       name: Queue Until Front of Line
       command: |
+
         # just confirm our required variables are present
-        : ${CIRCLECI_API_KEY:?"Required Env Variable not found!"}
         : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
         : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
         : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
@@ -33,6 +33,10 @@ steps:
         : ${CIRCLE_JOB:?"Required Env Variable not found!"}
         : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
 
+        # Only needed for private projects
+        if [ -z "$CIRCLECI_API_KEY" ]; then
+          echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
+        fi
 
         QUEUE_BRANCH=[ "<<parameters.consider-branch>>" == "true" ]
         QUEUE_JOB=[ "<<parameters.consider-job>>" == "true" ]
