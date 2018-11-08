@@ -20,6 +20,10 @@ parameters:
     type: string
     default: "*"
     description: "Only queue on specified branch"
+  vcs-type:
+    type: string
+    default: "github"
+    description: "Override VCS to 'bitbucket' if needed."
 steps:
   - run:
       name: Queue Until Front of Line
@@ -43,10 +47,7 @@ steps:
         fi
 
 
-        VCS_TYPE="github"
-        if [[ *"bitbucket"* = $CIRCLE_REPOSITORY_URL ]]; then
-          VCS_TYPE = "bitbucket"
-        fi
+        VCS_TYPE="<<parameters.vcs-type>>"
 
         if [ "<<parameters.consider-branch>>" != "true" ];then
           echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
