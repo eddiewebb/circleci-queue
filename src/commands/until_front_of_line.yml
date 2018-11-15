@@ -24,6 +24,10 @@ parameters:
     type: boolean
     default: true
     description: "Whether queuing should happen on a fork. Forks will only queue on public repos."
+  vcs-type:
+    type: string
+    default: "github"
+    description: "Override VCS to 'bitbucket' if needed."
 steps:
   - run:
       name: Queue Until Front of Line
@@ -48,24 +52,16 @@ steps:
           echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
         fi
 
-        QUEUE_BRANCH=[ "<<parameters.consider-branch>>" == "true" ]
-        QUEUE_JOB=[ "<<parameters.consider-job>>" == "true" ]
-        QUEUE_TIME=<<parameters.time>>
-        QUEUE_BRUTE=[ "<<parameters.dont-quit>>" == "true" ]
-        QUEUE_ONLY=<<parameters.only-on-branch>>
 
-        if [ "$QUEUE_ONLY" = "*" ] || [ "$QUEUE_ONLY" = "${CIRCLE_BRANCH}" ]; then
+        if [ "<<parameters.only-on-branch>>" = "*" ] || [ "<<parameters.only-on-branch>>" = "${CIRCLE_BRANCH}" ]; then
           echo "${CIRCLE_BRANCH} queueable"
         else
-          echo "Queueing only happens on ${QUEUE_ONLY}, skipping queue"
+          echo "Queueing only happens on <<parameters.only-on-branch>> branch, skipping queue"
           exit 0
         fi
 
 
-        VCS_TYPE="github"
-        if [[ *"bitbucket"* = $CIRCLE_REPOSITORY_URL ]]; then
-          VCS_TYPE = "bitbucket"
-        fi
+        VCS_TYPE="<<parameters.vcs-type>>"
 
         if [ "<<parameters.consider-branch>>" != "true" ];then
           echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
@@ -116,7 +112,7 @@ steps:
 
 
 
-        max_time=${QUEUE_TIME}
+        max_time=<<parameters.time>>
         echo "This build will block until all previous builds complete."
         echo "Max Queue Time: ${max_time} minutes."
 

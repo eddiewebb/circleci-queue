@@ -38,7 +38,7 @@ function setup {
 
   run jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG
 
-  assert_contains_text "QUEUE_TIME=1"
+  assert_contains_text "max_time=1"
 
 }
 
@@ -202,7 +202,7 @@ function setup {
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Queueing only happens on master, skipping queue"
+  assert_contains_text "Queueing only happens on master branch, skipping queue"
   assert_text_not_found "Max Queue Time: 1 minutes"
   [[ "$status" == "0" ]]
 
