@@ -52,3 +52,7 @@ jobs:
       - checkout
       - ...   #your commands
 ```
+
+## Note
+
+Queueing is not supported on forked repos. If a queue from a fork happens the queue will immediately exit and the next step of the job will begin.

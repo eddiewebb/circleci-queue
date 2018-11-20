@@ -28,8 +28,15 @@ steps:
   - run:
       name: Queue Until Front of Line
       command: |
+
+
+        if [ ! -z "$CIRCLE_PR_REPONAME" ]; then
+          echo "Queueing on forks is not supported. Skipping queue..."
+          # It's important that we not fail here because it could cause issues on the main repo's branch
+          exit 0
+        fi
+
         # just confirm our required variables are present
-        : ${CIRCLECI_API_KEY:?"Required Env Variable not found!"}
         : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
         : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
         : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
@@ -37,6 +44,10 @@ steps:
         : ${CIRCLE_JOB:?"Required Env Variable not found!"}
         : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
 
+        # Only needed for private projects
+        if [ -z "$CIRCLECI_API_KEY" ]; then
+          echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
+        fi
 
 
         if [ "<<parameters.only-on-branch>>" = "*" ] || [ "<<parameters.only-on-branch>>" = "${CIRCLE_BRANCH}" ]; then
@@ -60,8 +71,14 @@ steps:
 
 
         load_oldest_running_build_num(){
-          curl -s $jobs_api_url_template > /tmp/jobstatus.json
-          if [ -f $TESTING_MOCK_RESPONSE ];then cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json; fi
+          if [ -f $TESTING_MOCK_RESPONSE ];then 
+            echo "Using test mock response"
+            cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json 
+          else
+            echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your CIRCLECI_API_KEY is set."
+            curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
+            echo "API access successful"
+          fi
 
           #negative index grabs last (oldest) job in returned results.
           if [ "<<parameters.consider-job>>" != "true" ];then
