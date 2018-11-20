@@ -266,7 +266,7 @@ function setup {
 }
 
 
-@test "Command: script will skip queueing on forks when ignore-forks set" {
+@test "Command: script will skip queueing on forks" {
   # given
   process_config_with test/inputs/command-defaults.yml
 
