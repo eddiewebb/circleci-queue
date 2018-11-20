@@ -20,10 +20,6 @@ parameters:
     type: string
     default: "*"
     description: "Only queue on specified branch"
-  ignore-forks:
-    type: boolean
-    default: true
-    description: "Whether queuing should happen on a fork. Forks will only queue on public repos."
 docker:
   - image: circleci/node:10 #its just really popular, and therefore fast (cached)
 steps:
