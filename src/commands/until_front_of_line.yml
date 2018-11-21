@@ -71,9 +71,9 @@ steps:
 
 
         load_oldest_running_build_num(){
-          if [ -f $TESTING_MOCK_RESPONSE ];then 
+          if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
             echo "Using test mock response"
-            cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json 
+            cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
           else
             echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your CIRCLECI_API_KEY is set."
             curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
