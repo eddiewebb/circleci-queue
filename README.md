@@ -34,8 +34,8 @@ Oh No! Since `1 minute` is abnormally long for things to be queued, build #20 ab
 
 ```
 version: 2.1
-  orbs:
-    queue: eddiewebb/queue@volatile
+orbs:
+  queue: eddiewebb/queue@volatile
 
 jobs:
   some-job:
