@@ -7,7 +7,7 @@ parameters:
     type: boolean
     # this is true at command level as intention it to only block current job.
     default: true
-    description: "Should we only consider occurences of this job (otherwise entire workflow is restricted)?"
+    description: "Should we only consider occurences of this job? Otherwise this is intended to isolate entire workflows."
   time:
     type: string
     default: "10"
@@ -42,8 +42,6 @@ steps:
         : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
         : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
         : ${CIRCLE_JOB:?"Required Env Variable not found!"}
-        : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
-
         # Only needed for private projects
         if [ -z "$CIRCLECI_API_KEY" ]; then
           echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
@@ -65,6 +63,7 @@ steps:
           jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${CIRCLECI_API_KEY}&filter=running"
         else
           echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
+          : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
           jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?circle-token=${CIRCLECI_API_KEY}&filter=running"
         fi
 
