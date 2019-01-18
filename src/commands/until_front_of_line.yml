@@ -7,6 +7,7 @@ parameters:
     type: boolean
     # deprecated, do not use
     description: "Deprecated. Please see block-workflow."
+    default: true
   block-workflow:
     type: boolean
     # this is false at COMMAND level as intention it to only block CURRENT job.
