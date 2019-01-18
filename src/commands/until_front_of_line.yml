@@ -134,7 +134,6 @@ steps:
         wait_time=0
         loop_time=11
         max_time_seconds=$((max_time * 60))
-        load_current_workflow_values
        
         #
         # Queue Loop
