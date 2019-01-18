@@ -1,2 +1,50 @@
 version: 2.1
 description: Blocks the current job until no previous occurences of same job are running on this branch.
+
+examples:
+  queue_workflow:
+    description: Used typically as first job and will queue until no jobs from a previous workflow are running
+    usage:
+      version: 2.1
+      orbs:
+        queue: eddiewebb/queue@volatile
+
+      workflows:
+        build_deploy:
+          jobs:
+            - queue/block_workflow:
+                time: "10"                # max wait, in minutes (default 10)
+                only-on-branch: master  # restrict queueing to a specific branch (default *)
+            - some_other_job:
+                requires:
+                  - queue/block_workflow
+           
+  single_concurrency_job:
+    description: Used to ensure that a single job (deploy) is not run concurrently
+    usage:
+      version: 2.1
+      orbs:
+        queue: eddiewebb/queue@volatile
+
+      workflows:
+        build_deploy:
+          jobs:
+            - build
+            - deploy:
+                requires:
+                  - build
+      jobs:
+        build:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - run: echo "This job can overlap"
+
+        deploy:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - queue/until_front_of_line:
+                time: "10"                # max wait, in minutes (default 10)
+                only-on-branch: master  # restrict queueing to a specific branch (default *)
+            - run: echo "This job will not overlap"

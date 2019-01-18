@@ -5,9 +5,14 @@ parameters:
     description: "Should we only consider jobs running on the same branch?"
   consider-job:
     type: boolean
-    # this is true at command level as intention it to only block current job.
+    # deprecated, do not use
+    description: "Deprecated. Please see block-workflow."
     default: true
-    description: "Should we only consider occurences of this job? Otherwise this is intended to isolate entire workflows."
+  block-workflow:
+    type: boolean
+    # this is false at COMMAND level as intention it to only block CURRENT job.
+    default: false
+    description: "If true, this job will block until no other workflows with an earlier timestamp are running. Typically used as first job."
   time:
     type: string
     default: "10"
@@ -29,47 +34,34 @@ steps:
       name: Queue Until Front of Line
       command: |
 
-
-        if [ ! -z "$CIRCLE_PR_REPONAME" ]; then
-          echo "Queueing on forks is not supported. Skipping queue..."
-          # It's important that we not fail here because it could cause issues on the main repo's branch
-          exit 0
-        fi
-
-        # just confirm our required variables are present
-        : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
-        : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
-        : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
-        : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
-        : ${CIRCLE_JOB:?"Required Env Variable not found!"}
-        # Only needed for private projects
-        if [ -z "$CIRCLECI_API_KEY" ]; then
-          echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
-        fi
-
-
-        if [ "<<parameters.only-on-branch>>" = "*" ] || [ "<<parameters.only-on-branch>>" = "${CIRCLE_BRANCH}" ]; then
-          echo "${CIRCLE_BRANCH} queueable"
-        else
-          echo "Queueing only happens on <<parameters.only-on-branch>> branch, skipping queue"
-          exit 0
-        fi
-
-
-        VCS_TYPE="<<parameters.vcs-type>>"
-
-        if [ "<<parameters.consider-branch>>" != "true" ];then
-          echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
-          jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${CIRCLECI_API_KEY}&filter=running"
-        else
-          echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
-          : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
-          jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?circle-token=${CIRCLECI_API_KEY}&filter=running"
-        fi
+        load_variables(){
+          # just confirm our required variables are present
+          : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
+          : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
+          : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
+          : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
+          : ${CIRCLE_JOB:?"Required Env Variable not found!"}
+          # Only needed for private projects
+          if [ -z "$CIRCLECI_API_KEY" ]; then
+            echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
+          fi
+          VCS_TYPE="<<parameters.vcs-type>>"
+        }
 
 
 
-        load_oldest_running_build_num(){
+
+
+        fetch_filtered_active_builds(){
+          if [ "<<parameters.consider-branch>>" != "true" ];then
+            echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${CIRCLECI_API_KEY}&filter=running"
+          else
+            echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
+            : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?circle-token=${CIRCLECI_API_KEY}&filter=running"
+          fi
+
           if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
             echo "Using test mock response"
             cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
@@ -78,27 +70,36 @@ steps:
             curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
             echo "API access successful"
           fi
+        }
 
-          #negative index grabs last (oldest) job in returned results.
-          if [ "<<parameters.consider-job>>" != "true" ];then
-            echo "Orb parameter 'consider-job' is false, will block for any running jobs in this workflow."
-            oldest=`jq '.[-1].build_num' /tmp/jobstatus.json`
+        update_comparables(){     
+          fetch_filtered_active_builds
+
+          load_current_workflow_values
+
+          # falsey parameters are empty strings, so always compare against 'true' 
+          if [ "<<parameters.consider-job>>" != "true" ] || [ "<<parameters.block-workflow>>" = "true" ] ;then
+            echo "Orb parameter block-worflow is true."
+            echo "This job will block until no previous workflows have *any* jobs running."
+            oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/jobstatus.json`
+            oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/jobstatus.json`
           else
-            echo "Only blocking execution if running previous jobs matching: ${CIRCLE_JOB}"
-            oldest=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | .[-1].build_num" /tmp/jobstatus.json`
+            echo "Orb parameter block-worflow is false."
+            echo "Only blocking execution if running previous jobs matching this job: ${CIRCLE_JOB}"
+            oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].build_num" /tmp/jobstatus.json`
+            oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].committer_date" /tmp/jobstatus.json`
           fi
           echo "Oldest job: $oldest"
-          if [ -z $oldest ];then
+          if [ -z $oldest_commit_time ];then
             echo "API Call for existing jobs failed, failing this build.  Please check API token"
             exit 1
-          elif [ "null" == "$oldest" ];then
-            echo "No running builds found, this is likely a bug in queue script"
-            exit 1
-          else
-            oldest_running_build_num=$oldest
           fi
         }
 
+        load_current_workflow_values(){
+           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').committer_date' /tmp/jobstatus.json`
+
+        }
 
         cancel_current_build(){
           echo "Cancelleing build ${CIRCLE_BUILD_NUM}"
@@ -108,17 +109,43 @@ steps:
 
 
 
+        #
+        # We can skip a few use cases without calling API
+        #
+        if [ ! -z "$CIRCLE_PR_REPONAME" ]; then
+          echo "Queueing on forks is not supported. Skipping queue..."
+          # It's important that we not fail here because it could cause issues on the main repo's branch
+          exit 0
+        fi
+        if [ "<<parameters.only-on-branch>>" = "*" ] || [ "<<parameters.only-on-branch>>" = "${CIRCLE_BRANCH}" ]; then
+          echo "${CIRCLE_BRANCH} queueable"
+        else
+          echo "Queueing only happens on <<parameters.only-on-branch>> branch, skipping queue"
+          exit 0
+        fi
+
+        #
+        # Set values that wont change while we wait
+        # 
+        load_variables
         max_time=<<parameters.time>>
         echo "This build will block until all previous builds complete."
         echo "Max Queue Time: ${max_time} minutes."
-
         wait_time=0
         loop_time=11
         max_time_seconds=$((max_time * 60))
+        load_current_workflow_values
+       
+        #
+        # Queue Loop
+        #
         while true; do
-
-          load_oldest_running_build_num
-          if [ ${CIRCLE_BUILD_NUM} -le $oldest_running_build_num ]; then
+          update_comparables
+          echo "This Workflow Timestamp: $my_commit_time"
+          echo "Oldest Workflow Timestamp: $oldest_commit_time"
+          if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
+            # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical stirng compare is accurate to timestamp compare as wel
+            # in event of race, everyone wins
             echo "Front of the line, WooHoo!, Build continuing"
             break
           else

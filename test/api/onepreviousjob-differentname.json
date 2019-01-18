@@ -3,6 +3,7 @@
 {
   "testing-note":"This represents the current build, with a job that should be serial",
   "build_num" : 2,
+  "committer_date": "2019-01-17T11:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
     "CIRCLE_JOB":"singlejob"
@@ -21,7 +22,8 @@
 
 {
   "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
-  "build_num" : 1,
+  "build_num" : 3,
+  "committer_date": "2019-01-17T10:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
     "CIRCLE_JOB":"adifferentjob"
