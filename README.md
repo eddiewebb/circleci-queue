@@ -31,27 +31,7 @@ Oh No! Since `1 minute` is abnormally long for things to be queued, build #20 ab
 ![no queuing if only active build](assets/build_aborted.png)
 
 # Setup
-
-```
-version: 2.1
-orbs:
-  queue: eddiewebb/queue@volatile
-
-jobs:
-  some-job:
-    docker:
-      - image: eddiewebb/circleci-queue:latest
-    steps:
-      - queue/until_front_of_line:
-          time: 10                # max wait, in minutes (default 10)
-          consider-job: true      # only block for this job or any running builds in this project?
-          consider-branch: true   # only block of running job is on same branch (default true)
-          dont-quit: true         # If max-time is exceeded, this option will allow the build to proceed.
-          only-on-branch: master  # restrict queueing to a specific branch (default *)
-
-      - checkout
-      - ...   #your commands
-```
+See https://circleci.com/orbs/registry/orb/eddiewebb/queue#usage-examples for current examples
 
 ## Note
 
