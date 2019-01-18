@@ -3,6 +3,7 @@
 {
   "testing-note":"This represents the current build, with a job that should be serial",
   "build_num" : 2,
+  "committer_date": "2019-01-17T11:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
     "CIRCLE_JOB":"singlejob"
@@ -21,7 +22,8 @@
 
 {
   "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
-  "build_num" : 1,
+  "build_num" : 3,
+  "committer_date": "2019-01-17T10:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
     "CIRCLE_JOB":"singlejob"
@@ -29,25 +31,6 @@
   "workflows" : {
     "job_name" : "singlejob",
     "job_id" : "random-hash-2",
-    "workflow_id" : "ec6172d3-b286-4d3a-a1da-c4efba0a0c05",
-    "workspace_id" : "a1892dee-6e9e-4f2e-adbc-a5629a97b483",
-    "upstream_job_ids" : [ ],
-    "upstream_concurrency_map" : { },
-    "workflow_name" : "build-deploy"
-  },
-  "status" : "running"
-},
-
-{
-  "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
-  "build_num" : 1,
-  "branch" : "master",
-  "build_parameters":{
-    "CIRCLE_JOB":"deploy-heroku"
-  },
-  "workflows" : {
-    "job_name" : "deploy-heroku",
-    "job_id" : "random-hash-1",
     "workflow_id" : "ec6172d3-b286-4d3a-a1da-c4efba0a0c05",
     "workspace_id" : "a1892dee-6e9e-4f2e-adbc-a5629a97b483",
     "upstream_job_ids" : [ ],

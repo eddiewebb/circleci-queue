@@ -5,9 +5,14 @@ parameters:
     description: "Should we only consider jobs running on the same branch?"
   consider-job:
     type: boolean
-    # this is false for job level, as the intention is to make sure no previous workfllws are running
+    # this is true at command level as intention it to only block current job.
     default: false
-    description: "Should we only consider occurences of this job (otherwise entire workflow is restricted)?"
+    description: "Deprecated. Please see block-workflow."
+  block-workflow:
+    type: boolean
+    # this is true at command level as intention it to only block current job.
+    default: true
+    description: "If true, this job will block until no other workflows with an earlier timestamp are running. Typically used as first job."
   time:
     type: string
     default: "10"
