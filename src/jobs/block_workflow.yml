@@ -25,6 +25,11 @@ parameters:
     type: string
     default: "*"
     description: "Only queue on specified branch"
+  vcs-type:
+    type: string
+    default: "github"
+    description: "Override VCS to 'bitbucket' if needed."
+
 docker:
   - image: circleci/node:10 #its just really popular, and therefore fast (cached)
 steps:
@@ -34,3 +39,4 @@ steps:
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
       only-on-branch: <<parameters.only-on-branch>>
+      vcs-type: <<parameters.vcs-type>>
