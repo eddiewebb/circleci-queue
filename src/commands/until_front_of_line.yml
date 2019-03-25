@@ -81,13 +81,13 @@ steps:
           if [ "<<parameters.consider-job>>" != "true" ] || [ "<<parameters.block-workflow>>" = "true" ] ;then
             echo "Orb parameter block-worflow is true."
             echo "This job will block until no previous workflows have *any* jobs running."
-            oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/jobstatus.json`
-            oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/jobstatus.json`
+            oldest_running_build_num=`jq 'sort_by(.author_date)| .[0].build_num' /tmp/jobstatus.json`
+            oldest_commit_time=`jq 'sort_by(.author_date)| .[0].author_date' /tmp/jobstatus.json`
           else
             echo "Orb parameter block-worflow is false."
             echo "Only blocking execution if running previous jobs matching this job: ${CIRCLE_JOB}"
-            oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].build_num" /tmp/jobstatus.json`
-            oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].committer_date" /tmp/jobstatus.json`
+            oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.author_date)|  .[0].build_num" /tmp/jobstatus.json`
+            oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.author_date)|  .[0].author_date" /tmp/jobstatus.json`
           fi
           echo "Oldest job: $oldest"
           if [ -z $oldest_commit_time ];then
@@ -97,7 +97,7 @@ steps:
         }
 
         load_current_workflow_values(){
-           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').committer_date' /tmp/jobstatus.json`
+           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').author_date' /tmp/jobstatus.json`
 
         }
 
