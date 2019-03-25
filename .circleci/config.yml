@@ -23,7 +23,7 @@ jobs:
           name: Pack and Validate
           command: |
             circleci config pack src/ > packed.yml
-            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY}
+            circleci orb validate packed.yml --token ${CIRCLECI_API_KEY} --token ${CIRCLECI_API_KEY}
             circleci orb publish packed.yml eddiewebb/queue@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}
       - install-bats
       - run:
