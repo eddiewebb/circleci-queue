@@ -79,12 +79,12 @@ steps:
 
           # falsey parameters are empty strings, so always compare against 'true' 
           if [ "<<parameters.consider-job>>" != "true" ] || [ "<<parameters.block-workflow>>" = "true" ] ;then
-            echo "Orb parameter block-worflow is true."
+            echo "Orb parameter block-workflow is true."
             echo "This job will block until no previous workflows have *any* jobs running."
             oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/jobstatus.json`
             oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/jobstatus.json`
           else
-            echo "Orb parameter block-worflow is false."
+            echo "Orb parameter block-workflow is false."
             echo "Only blocking execution if running previous jobs matching this job: ${CIRCLE_JOB}"
             oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].build_num" /tmp/jobstatus.json`
             oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].committer_date" /tmp/jobstatus.json`
