@@ -89,7 +89,7 @@ steps:
             oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].build_num" /tmp/jobstatus.json`
             oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].committer_date" /tmp/jobstatus.json`
           fi
-          echo "Oldest job: $oldest"
+          echo "Oldest job: $oldest_running_build_num"
           if [ -z $oldest_commit_time ];then
             echo "API Call for existing jobs failed, failing this build.  Please check API token"
             exit 1
