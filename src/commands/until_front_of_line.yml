@@ -81,23 +81,23 @@ steps:
           if [ "<<parameters.consider-job>>" != "true" ] || [ "<<parameters.block-workflow>>" = "true" ] ;then
             echo "Orb parameter block-workflow is true."
             echo "This job will block until no previous workflows have *any* jobs running."
-            oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/jobstatus.json`
-            oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/jobstatus.json`
+            oldest_running_build_num=`jq 'sort_by(.queued_at)| .[0].build_num' /tmp/jobstatus.json`
+            oldest_queue_time=`jq 'sort_by(.queued_at)| .[0].queued_at' /tmp/jobstatus.json`
           else
             echo "Orb parameter block-workflow is false."
             echo "Only blocking execution if running previous jobs matching this job: ${CIRCLE_JOB}"
-            oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].build_num" /tmp/jobstatus.json`
-            oldest_commit_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.committer_date)|  .[0].committer_date" /tmp/jobstatus.json`
+            oldest_running_build_num=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.queued_at)|  .[0].build_num" /tmp/jobstatus.json`
+            oldest_queue_time=`jq ". | map(select(.build_parameters.CIRCLE_JOB==\"${CIRCLE_JOB}\")) | sort_by(.queued_at)|  .[0].queued_at" /tmp/jobstatus.json`
           fi
           echo "Oldest job: $oldest"
-          if [ -z $oldest_commit_time ];then
+          if [ -z $oldest_queue_time ];then
             echo "API Call for existing jobs failed, failing this build.  Please check API token"
             exit 1
           fi
         }
 
         load_current_workflow_values(){
-           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').committer_date' /tmp/jobstatus.json`
+           my_queue_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').queued_at' /tmp/jobstatus.json`
 
         }
 
@@ -140,9 +140,9 @@ steps:
         #
         while true; do
           update_comparables
-          echo "This Workflow Timestamp: $my_commit_time"
-          echo "Oldest Workflow Timestamp: $oldest_commit_time"
-          if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
+          echo "This Workflow Timestamp: $my_queue_time"
+          echo "Oldest Workflow Timestamp: $oldest_queue_time"
+          if [[ "$oldest_queue_time" > "$my_queue_time" ]] || [[ "$oldest_queue_time" = "$my_queue_time" ]] ; then
             # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical stirng compare is accurate to timestamp compare as wel
             # in event of race, everyone wins
             echo "Front of the line, WooHoo!, Build continuing"
