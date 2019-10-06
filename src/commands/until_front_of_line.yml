@@ -10,7 +10,7 @@ parameters:
     default: true
   block-workflow:
     type: boolean
-    # this is false at COMMAND level as intention it to only block CURRENT job.
+    # this is false at COMMAND level as intention is to only block CURRENT job.
     default: false
     description: "If true, this job will block until no other workflows with an earlier timestamp are running. Typically used as first job."
   time:
@@ -20,7 +20,7 @@ parameters:
   dont-quit:
     type: boolean
     default: false
-    description: "Quiting is for losers. Force job through once time expires instead of failing."
+    description: "Quitting is for losers. Force job through once time expires instead of failing."
   only-on-branch:
     type: string
     default: "*"
@@ -43,7 +43,7 @@ steps:
           : ${CIRCLE_JOB:?"Required Env Variable not found!"}
           # Only needed for private projects
           if [ -z "$CIRCLECI_API_KEY" ]; then
-            echo "CIRCLECI_API_KEY not set. Private projects will be inaccessable."
+            echo "CIRCLECI_API_KEY not set. Private projects will be inaccessible."
           fi
           VCS_TYPE="<<parameters.vcs-type>>"
         }
@@ -143,7 +143,7 @@ steps:
           echo "This Workflow Timestamp: $my_commit_time"
           echo "Oldest Workflow Timestamp: $oldest_commit_time"
           if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
-            # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical stirng compare is accurate to timestamp compare as wel
+            # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical string compare is accurate to timestamp compare as well
             # in event of race, everyone wins
             echo "Front of the line, WooHoo!, Build continuing"
             break
@@ -159,7 +159,7 @@ steps:
               exit 0
             else
               cancel_current_build
-              sleep 10 #waut for APi to cancel this job, rather than showing as failure
+              sleep 10 # wait for API to cancel this job, rather than showing as failure
               exit 1 # but just in case, fail job
             fi
           fi
