@@ -1,6 +1,8 @@
 # CircleCI Concurrency Control Orb
 
-[![CircleCI](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master.svg?style=svg)](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master) [![GitHub license](https://img.shields.io/github/license/eddiewebb/circleci-queue)](https://github.com/eddiewebb/circleci-queue/blob/master/LICENSE)
+[![CircleCI](https://img.shields.io/circleci/build/gh/eddiewebb/circleci-queue)](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master) 
+[![GitHub license](https://img.shields.io/github/license/eddiewebb/circleci-queue)](https://github.com/eddiewebb/circleci-queue/blob/master/LICENSE)
+[![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/eddiewebb/queue)](https://circleci.com/orbs/registry/orb/eddiewebb/queue)
 
 CircleCI Orb to limit workflow concurrency.
 
