@@ -20,6 +20,7 @@ function setup {
   # given
   process_config_with test/inputs/fulljob.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -47,6 +48,7 @@ function setup {
   # given
   process_config_with test/inputs/command-defaults.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -74,6 +76,7 @@ function setup {
   # given
   process_config_with test/inputs/command-defaults.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -100,6 +103,7 @@ function setup {
   # given
   process_config_with test/inputs/command-defaults.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -127,6 +131,7 @@ function setup {
   # given
   process_config_with test/inputs/command-non-default.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -156,6 +161,7 @@ function setup {
   # given
   process_config_with test/inputs/command-non-default.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -185,6 +191,7 @@ function setup {
   # given
   process_config_with test/inputs/command-filter-branch.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #Response shouldn't matter as we're ending early
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -212,6 +219,7 @@ function setup {
   # given
   process_config_with test/inputs/command-defaults.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -243,6 +251,7 @@ function setup {
   # given
   process_config_with test/inputs/command-non-default.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
