@@ -19,7 +19,7 @@ function setup {
 @test "Job: full job expands properly" {
   # given
   process_config_with test/inputs/fulljob.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -46,7 +46,7 @@ function setup {
 @test "Command: script will proceed with no previous jobs" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -73,7 +73,7 @@ function setup {
 @test "Command: script will proceed with previous job of different name" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -99,7 +99,7 @@ function setup {
 @test "Command: script will WAIT with previous job of same name" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjobsamename.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -126,7 +126,7 @@ function setup {
 @test "Command: script with dont-quit will not fail current job" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjobsamename.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -155,7 +155,7 @@ function setup {
 @test "Command: script will consider branch" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -184,7 +184,7 @@ function setup {
 @test "Command: script will skip queueing on branches that don't match filter" {
   # given
   process_config_with test/inputs/command-filter-branch.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json #Response shouldn't matter as we're ending early
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #Response shouldn't matter as we're ending early
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -211,7 +211,7 @@ function setup {
 @test "Command: script will consider branch default" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -242,7 +242,7 @@ function setup {
 @test "Command: script will queue on different job when consider-job is false" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
