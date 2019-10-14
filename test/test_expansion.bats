@@ -63,6 +63,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -91,6 +92,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -118,6 +120,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -146,6 +149,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -176,6 +180,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -206,6 +211,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -234,6 +240,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -266,6 +273,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
