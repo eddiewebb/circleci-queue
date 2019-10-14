@@ -75,13 +75,14 @@ steps:
         fetch_active_workflows(){
           for workflow in `jq -r ".[] | .workflows.workflow_id" /tmp/jobstatus.json | uniq`
           do
-            if [ ! -z $TESTING_MOCK_WORKFLOW_RESPONSES ] && [ -f $TESTING_MOCK_WORKFLOW_RESPONSES/$workflow.json ]; then
+            if [ ! -z $TESTING_MOCK_WORKFLOW_RESPONSES ] && [ -f $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json ]; then
               echo "Using test mock workflow response"
-              created_at=`cat $TESTING_MOCK_WORKFLOW_RESPONSES/$workflow.json | jq -r '.created_at'`
+              created_at=`cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json | jq -r '.created_at'`
             else
-              created_at=`curl -f -s "https://circleci.com/api/v2/workflow/$workflow?circle-token=$circle_token" | jq -r '.created_at'`
+              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=$circle_token" > /tmp/workflow-${workflow}.json
+              created_at=`jq -r '.created_at' /tmp/workflow-${workflow}.json`
             fi
-            cat /tmp/jobstatus.json | jq --arg created_at $created_at --arg workflow $workflow '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {created_at:$created_at}' | tee /tmp/jobstatus.json
+            cat /tmp/jobstatus.json | jq --arg created_at $created_at --arg workflow ${workflow} '(.[] | select(.workflows.workflow_id == ${workflow}) | .workflows) |= . + {created_at:$created_at}' | tee /tmp/jobstatus.json
           done
         }
 
@@ -107,6 +108,8 @@ steps:
           echo "Oldest job: $oldest_running_build_num"
           if [ -z $oldest_commit_time ];then
             echo "API Call for existing jobs failed, failing this build.  Please check API token"
+            cat /tmp/jobstatus.json
+            cat /tmp/workflow-*.json
             exit 1
           fi
         }
