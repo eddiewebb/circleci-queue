@@ -75,7 +75,7 @@ jobs:
             if [ -z ${SEMVER_INCREMENT} ];then
               echo "Merge commit did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
               exit 1
-            else [ "$SEMVER_INCREMENT" = "skip" ];then
+            elif [ "$SEMVER_INCREMENT" == "skip" ];then
               echo "SEMVER in commit indicated to skip orb release"
               echo "export PR_MESSAGE=\"Orb publish was skipped due to [semver:skip] in commit message.\""  >> $BASH_ENV
               exit 0
