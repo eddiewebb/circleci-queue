@@ -143,6 +143,6 @@ commands:
       - run:
           name: Get PR Info
           command: |
-            PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/(Try|Merge) #\([0-9]*\)/\1/p'`
+            PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/(Try|Merge) #([0-9]*)/\2/p'`
             echo "PR_NUMBER is ${PR_NUMBER}"
             echo "export PR_NUMBER=${PR_NUMBER}" >> $BASH_ENV
