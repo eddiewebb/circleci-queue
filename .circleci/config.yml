@@ -25,7 +25,7 @@ workflows:
             - test
           filters:
             branches:
-              only: master
+              only: staging
 
 jobs:
   validate:
@@ -76,15 +76,11 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - install-circleci
-      - run:
-          name: Grab Commit Info
-          command: |
-            curl "https://circleci.com/api/v1.1/project/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}?circle-token=${CIRCLECI_API_KEY}" > build_info.txt            
+      - install-circleci       
       - run:
           name: Promote to prod
           command: |
-            SEMVER_INCREMENT=`jq -r '.subject' build_info.txt | sed -En 's/.*\[semver:(major|minor|patch)\].*/\1/p'`
+            SEMVER_INCREMENT=`git log -1 --pretty=%B | sed -En 's/.*\[semver:(major|minor|patch)\].*/\1/p'`
             if [ -z ${SEMVER_INCREMENT} ];then
               echo "Merge commit did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
               exit 1
@@ -96,7 +92,7 @@ jobs:
       - run:
           name: Publish Prod version to PR
           command: |
-            PR_NUMBER=`jq -r '.subject' build_info.txt | sed -n 's/Merge pull request #\([0-9]*\) from.*/\1/p'`
+            PR_NUMBER=`jq -r 'git log -1 --pretty=%s  | sed -n 's/Merge #\([0-9]*\)/\1/p'`
             echo "PR_NUMBER is ${PR_NUMBER}"
             if [ "$PR_NUMBER" == "" ];then
               echo "No pr found, do nothing"
