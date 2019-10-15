@@ -11,18 +11,9 @@ workflows:
   build-deploy:
     jobs:
       - validate
-      - approve:
-          type: approval
-          requires:
-            - validate
-          filters:
-            branches:
-              ignore: master
       - test:
           requires: 
-            - approve
             - validate
-          context: orbs
       - publish:
           requires:
             - test
