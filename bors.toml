@@ -1,3 +1,6 @@
 status = [
   "ci/circleci/%"
 ]
+pr_status = [
+  "ci/circleci/test"
+]
