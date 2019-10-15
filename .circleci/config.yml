@@ -51,7 +51,7 @@ jobs:
             ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
             echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
             echo $ORB_VERSION
-            echo "export PR_MESSAGE=\"BotComment: *Development* version of orb available for manual validation - \`${ORB_VERSION}\`\"" >> $BASH_ENV
+            echo "export PR_MESSAGE=\"BotComment: *Development* version of orb available for manual validation - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
       - install-bats
       - run:
           name: Import Tests using BATS
