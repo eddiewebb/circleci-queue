@@ -11,18 +11,15 @@ workflows:
   build-deploy:
     jobs:
       - validate
-      - approve:
-          type: approval
-          requires:
+      - test:
+          requires: 
             - validate
           filters:
             branches:
-              ignore: master
-      - test:
-          requires: 
-            - approve
-            - validate
-          context: orbs
+              only: 
+                - master
+                - staging
+                - trying
       - publish:
           requires:
             - test
@@ -106,6 +103,7 @@ jobs:
               exit 0
             fi
             curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"*Production* version of orb available for use - \`${ORB_VERSION}\`\"}"
+
 commands:
   install-bats:
     description: installs the BATS bash testing tool
