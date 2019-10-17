@@ -75,13 +75,14 @@ steps:
         fetch_active_workflows(){
           for workflow in `jq -r ".[] | .workflows.workflow_id" /tmp/jobstatus.json | uniq`
           do
+            workflow_file=/tmp/workflow-${workflow}.json
             if [ ! -z $TESTING_MOCK_WORKFLOW_RESPONSES ] && [ -f $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json ]; then
               echo "Using test mock workflow response"
-              created_at=`cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json | jq -r '.created_at'`
+              cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json > ${workflow_file}
             else
-              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=${CIRCLECI_API_KEY}" > /tmp/workflow-${workflow}.json
-              created_at=`jq -r '.created_at' /tmp/workflow-${workflow}.json`
+              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=${CIRCLECI_API_KEY}" > ${workflow_file}
             fi
+            created_at=`jq -r '.created_at' ${workflow_file}`
             cat /tmp/jobstatus.json | jq --arg created_at $created_at --arg workflow ${workflow} '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {created_at:$created_at}' | tee /tmp/jobstatus.json
           done
         }
