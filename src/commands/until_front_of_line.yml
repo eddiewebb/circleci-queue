@@ -79,7 +79,7 @@ steps:
               echo "Using test mock workflow response"
               created_at=`cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json | jq -r '.created_at'`
             else
-              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=$circle_token" > /tmp/workflow-${workflow}.json
+              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=${CIRCLECI_API_KEY}" > /tmp/workflow-${workflow}.json
               created_at=`jq -r '.created_at' /tmp/workflow-${workflow}.json`
             fi
             cat /tmp/jobstatus.json | jq --arg created_at $created_at --arg workflow ${workflow} '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {created_at:$created_at}' | tee /tmp/jobstatus.json
