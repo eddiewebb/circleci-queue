@@ -14,12 +14,17 @@ workflows:
       - test:
           requires: 
             - validate
+          filters:
+            branches:
+              only: 
+                - staging
+                - trying
       - publish:
           requires:
             - test
           filters:
             branches:
-              only: master
+              only: staging
 
 jobs:
   validate:
@@ -38,65 +43,53 @@ jobs:
       - checkout
       - install-circleci
       - pack-and-validate
+      - pr-info
       - run:
           name: Publish Dev
           command: |
-            PUBLISH_MESSAGE=`circleci orb publish packed.yml eddiewebb/<<pipeline.parameters.orbname>>@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} --token ${CIRCLECI_API_KEY}`
+            PUBLISH_MESSAGE=`circleci orb publish packed.yml eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER} --token ${CIRCLECI_API_KEY}`
             ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
             echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
             echo $ORB_VERSION
+            echo "export PR_MESSAGE=\"BotComment: *Development* version of orb available for manual validation - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
       - install-bats
       - run:
           name: Import Tests using BATS
           command: |
-            export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1}"
-            bats test
-      - run:
-          name: Publish Dev version to PR
-          command: |
-            if [ "$CIRCLE_PR_NUMBER" != "" ];then
-              echo "PR_NUMBER is ${CIRCLE_PR_NUMBER}"
-            else
-              CIRCLE_PR_NUMBER=$(echo $CIRCLE_PULL_REQUEST | sed -n 's/.*\/pull\/\([0-9]*\)/\1/p')
-              if [ "$CIRCLE_PR_NUMBER" == "" ];then
-                echo "No pr found, do nothing"
-                exit 0
-              fi
-            fi
-            curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${CIRCLE_PR_NUMBER}/comments" -d "{\"body\":\"Dev version of orb available for testing - \`${ORB_VERSION}\`\"}"
+            export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
+            bats test            
+      - pr-comment
+
   publish:
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
     steps:
       - checkout
-      - install-circleci
-      - run:
-          name: Grab Commit Info
-          command: |
-            curl "https://circleci.com/api/v1.1/project/gh/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}?circle-token=${CIRCLECI_API_KEY}" > build_info.txt            
+      - install-circleci   
+      - pr-info  
       - run:
           name: Promote to prod
           command: |
-            SEMVER_INCREMENT=`jq -r '.subject' build_info.txt | sed -En 's/.*\[semver:(major|minor|patch)\].*/\1/p'`
+            SEMVER_INCREMENT=`git log -1 --pretty=%B | sed -En 's/.*\[semver:(major|minor|patch|skip)\].*/\1/p'`
             if [ -z ${SEMVER_INCREMENT} ];then
               echo "Merge commit did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
               exit 1
-            fi
-            PUBLISH_MESSAGE=`circleci orb publish promote eddiewebb/<<pipeline.parameters.orbname>>@dev:${CIRCLE_BRANCH}-${CIRCLE_SHA1} ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`
-            echo $PUBLISH_MESSAGE
-            ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
-            echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
-      - run:
-          name: Publish Prod version to PR
-          command: |
-            PR_NUMBER=`jq -r '.subject' build_info.txt | sed -n 's/Merge pull request #\([0-9]*\) from.*/\1/p'`
-            echo "PR_NUMBER is ${PR_NUMBER}"
-            if [ "$PR_NUMBER" == "" ];then
-              echo "No pr found, do nothing"
+            elif [ "$SEMVER_INCREMENT" == "skip" ];then
+              echo "SEMVER in commit indicated to skip orb release"
+              echo "export PR_MESSAGE=\"Orb publish was skipped due to [semver:skip] in commit message.\""  >> $BASH_ENV
               exit 0
+            else
+              PUBLISH_MESSAGE=`circleci orb publish promote eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER} ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`            
+              echo $PUBLISH_MESSAGE
+              ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
+              echo "export PR_MESSAGE=\"BotComment: *Production* version of orb available for use - \`${ORB_VERSION}\`\"" >> $BASH_ENV
             fi
-            curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"*Production* version of orb available for use - \`${ORB_VERSION}\`\"}"
+      - pr-comment
+
+
+
+
 commands:
   install-bats:
     description: installs the BATS bash testing tool
@@ -131,3 +124,25 @@ commands:
           command: |
             circleci config pack src/ > packed.yml
             circleci orb validate packed.yml
+
+  pr-comment:
+    description: add nessage to pr this build originated from
+    steps:
+      - run:
+          name: Publish Version to PR
+          command: |
+            if [ "$PR_NUMBER" == "" ];then
+              echo "No pr found, do nothing"
+              exit 0
+            fi
+            curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"${PR_MESSAGE}\"}"
+
+  pr-info:
+    description: get PR number this change originated from
+    steps:
+      - run:
+          name: Get PR Info
+          command: |
+            PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/(Try|Merge) #([0-9]*)/\2/p'`
+            echo "PR_NUMBER is ${PR_NUMBER}"
+            echo "export PR_NUMBER=${PR_NUMBER}" >> $BASH_ENV
