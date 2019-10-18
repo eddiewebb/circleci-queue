@@ -1,5 +1,5 @@
 status = [
-  'ci/circleci: publish'
+  'ci/circleci%'
 ]
 
 pr_status = [
