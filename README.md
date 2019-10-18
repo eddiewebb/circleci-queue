@@ -13,11 +13,11 @@ See https://github.com/eddiewebb/circleci-challenge as an example using blue/gre
 
 ## Basic Usage
 
-This adds concurrency limits by ensuring any jobs with this step will only continue once no previous builds are running. It supports a single argument of how many minutes to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY` - which can be created in [account settings](https://circleci.com/account/api).
+This adds concurrency limits, by ensuring that any jobs with this step will only continue once there are no previous builds are running. It supports a single argument of how many minutes it has to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY` - which can be created in [account settings](https://circleci.com/account/api).
 
 ## Screenshots / Examples
 
-Suppose we have a workflow take takes a little while to run. Normally the build (#18) will run immediately, with no queuing.
+Suppose we have a workflow take,which takes a little while to run. Normally the build (#18) will run immediately, with no queuing.
 ![no queuing if only active build](assets/build_noqueue.png)
 
 Someone else on the team makes another commit, since the first build (#18) is still running, it will queue build #19.
