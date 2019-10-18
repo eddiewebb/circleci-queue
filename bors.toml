@@ -1,7 +1,3 @@
 status = [
-  'ci/circleci%'
-]
-
-pr_status = [
-  'ci/circleci: validate'
+  'build-deploy'
 ]
