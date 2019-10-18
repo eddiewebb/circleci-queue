@@ -1,3 +1,7 @@
 status = [
-  "ci/circleci: publish"
+  'ci/circleci: publish'
+]
+
+pr_status = [
+  'ci/circleci: validate'
 ]
