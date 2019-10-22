@@ -11,6 +11,11 @@ workflows:
   build-deploy:
     jobs:
       - validate
+          filters:
+            branches:
+              only: 
+                - staging
+                - trying
       - test:
           requires: 
             - validate
