@@ -32,6 +32,7 @@ parameters:
 
 docker:
   - image: circleci/node:10 #its just really popular, and therefore fast (cached)
+resource_class: small
 steps:
   - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
