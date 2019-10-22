@@ -109,7 +109,7 @@ commands:
           command: |
             curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
             chmod a+x yq
-            mv yq /usr/local/bin/
+            mv yq /usr/local/bin/            
   install-circleci:
     description: installs the new CIrcleCI CLI with orb support
     steps:
@@ -129,7 +129,6 @@ commands:
           command: |
             circleci config pack src/ > packed.yml
             circleci orb validate packed.yml
-
   pr-comment:
     description: add nessage to pr this build originated from
     steps:
@@ -141,7 +140,6 @@ commands:
               exit 0
             fi
             curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"${PR_MESSAGE}\"}"
-
   pr-info:
     description: get PR number this change originated from
     steps:
