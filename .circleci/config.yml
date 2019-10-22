@@ -10,7 +10,7 @@ parameters:
 workflows:
   build-deploy:
     jobs:
-      - validate
+      - validate:
           filters:
             branches:
               only: 
