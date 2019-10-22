@@ -83,7 +83,7 @@ jobs:
               PUBLISH_MESSAGE=`circleci orb publish promote eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER} ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`            
               echo $PUBLISH_MESSAGE
               ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
-              echo "export PR_MESSAGE=\"BotComment: *Production* version of orb available for use - \`${ORB_VERSION}\`\"" >> $BASH_ENV
+              echo "export PR_MESSAGE=\"BotComment: *Production* version of orb available for use - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
             fi
       - pr-comment
 
