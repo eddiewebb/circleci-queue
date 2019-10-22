@@ -13,9 +13,8 @@ workflows:
       - validate:
           filters:
             branches:
-              only: 
-                - staging
-                - trying
+              ignore: 
+                - master
       - test:
           requires: 
             - validate
