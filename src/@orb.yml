@@ -1,5 +1,9 @@
 version: 2.1
-description: Blocks the current job until no previous occurences of same job are running on this branch.
+description: |
+  Allows jobs or entire workflows to be queued to ensure they run in serial.  
+  This is ideal for deployments or other activities that must not run concurrently.
+  May optionaly consider branch-level isolation if unique branches should run concurrently. 
+  This orb requires the project to have an API to query build statuses.
 
 examples:
   queue_workflow:
