@@ -3,11 +3,6 @@ parameters:
     type: boolean
     default: true
     description: "Should we only consider jobs running on the same branch?"
-  consider-job:
-    type: boolean
-    # deprecated, do not use.
-    default: false
-    description: "Deprecated. Please see block-workflow."
   block-workflow:
     type: boolean
     # this is true at JOB level as intention is to block workflow
@@ -24,20 +19,24 @@ parameters:
   only-on-branch:
     type: string
     default: "*"
-    description: "Only queue on specified branch"
+    description: "Only queue on specified branch. Default is to enforce serialization on all branches."
   vcs-type:
     type: string
     default: "github"
     description: "Override VCS to 'bitbucket' if needed."
+  confidence:
+    type: string
+    default: "1"
+    description: "Due to scarce API, we need to requery the recent jobs list to ensure we're not just in a pending state for previous jobs.  This number indicates the threhold for API returning no previous pending jobs. Default is a single confirmation."
 
 docker:
-  - image: circleci/node:10 #its just really popular, and therefore fast (cached)
+  - image: cimg/base:stable
 resource_class: small
 steps:
   - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
-      consider-job: <<parameters.consider-job>>
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
       only-on-branch: <<parameters.only-on-branch>>
       vcs-type: <<parameters.vcs-type>>
+      confidence: <<parameters.confidence>>

@@ -8,5 +8,5 @@ jobs:
           # non-defaults for each paramter
           time: "1"
           consider-branch: false
-          consider-job: false
           dont-quit: true
+          block-workflow: true

@@ -254,7 +254,7 @@ function setup {
 
 
 
-@test "Command: script will queue on different job when consider-job is false" {
+@test "Command: script will queue on different job when block-workflow is true" {
   # given
   process_config_with test/inputs/command-non-default.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
