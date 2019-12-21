@@ -4,6 +4,10 @@ description: |
   This is ideal for deployments or other activities that must not run concurrently.
   May optionaly consider branch-level isolation if unique branches should run concurrently. 
   This orb requires the project to have an API key in order to query build states.
+  
+display:
+  home_url: https://eddiewebb.github.io/circleci-queue/
+  source_url: https://github.com/eddiewebb/circleci-queue
 
 examples:
   queue_workflow:
