@@ -3,11 +3,6 @@ parameters:
     type: boolean
     default: true
     description: "Should we only consider jobs running on the same branch?"
-  consider-job:
-    type: boolean
-    # deprecated, do not use
-    description: "Deprecated. Please see block-workflow."
-    default: true
   block-workflow:
     type: boolean
     # this is false at COMMAND level as intention is to only block CURRENT job.
@@ -29,6 +24,10 @@ parameters:
     type: string
     default: "github"
     description: "Override VCS to 'bitbucket' if needed."
+  confidence:
+    type: string
+    default: "1"
+    description: "Due to scarce API, we need to requery the recent jobs list to ensure we're not just in a pending state for previous jobs.  This number indicates the threhold for API returning no previous pending jobs. Default is a single confirmation."
 steps:
   - run:
       name: Queue Until Front of Line
@@ -101,7 +100,7 @@ steps:
           load_current_workflow_values
 
           # falsey parameters are empty strings, so always compare against 'true' 
-          if [ "<<parameters.consider-job>>" != "true" ] || [ "<<parameters.block-workflow>>" = "true" ] ;then
+          if [ "<<parameters.block-workflow>>" = "true" ] ;then
             echo "Orb parameter block-workflow is true."
             echo "This job will block until no previous workflows have *any* jobs running."
             oldest_running_build_num=`jq 'sort_by(.workflows.created_at)| .[0].build_num' /tmp/augmented_jobstatus.json`
@@ -166,15 +165,23 @@ steps:
         #
         # Queue Loop
         #
+        confidence=0
         while true; do
           update_comparables
           echo "This Workflow Timestamp: $my_commit_time"
           echo "Oldest Workflow Timestamp: $oldest_commit_time"
           if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
             # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical string compare is accurate to timestamp compare as well
-            # in event of race, everyone wins
-            echo "Front of the line, WooHoo!, Build continuing"
-            break
+            # recent-jobs API does not include pending, so it is posisble we queried in between a workfow transition, and we;re NOT really front of line.
+            if [ $confidence -lt <<parameters.confidence>> ];then
+              # To grow confidence, we check again with a delay.
+              confidence=$((confidence+1))
+              echo "API shows no previous jobs/workflows, but it is possible a previous workflow has pending jobs not yet visible in API."
+              echo "Rerunning check ${confidence}/<<parameters.confidence>>"
+            else
+              echo "Front of the line, WooHoo!, Build continuing"
+              break
+            fi
           else
             echo "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (${oldest_running_build_num}) to complete."
             echo "Total Queue time: ${wait_time} seconds."

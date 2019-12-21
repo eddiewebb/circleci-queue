@@ -3,11 +3,15 @@ description: |
   Allows jobs or entire workflows to be queued to ensure they run in serial.  
   This is ideal for deployments or other activities that must not run concurrently.
   May optionaly consider branch-level isolation if unique branches should run concurrently. 
-  This orb requires the project to have an API to query build statuses.
+  This orb requires the project to have an API key in order to query build states.
+  
+display:
+  home_url: https://eddiewebb.github.io/circleci-queue/
+  source_url: https://github.com/eddiewebb/circleci-queue
 
 examples:
   queue_workflow:
-    description: Used typically as first job and will queue until no jobs from a previous workflow are running
+    description: Used typically as first job and will queue until no previous workflows are running
     usage:
       version: 2.1
       orbs:
@@ -24,7 +28,10 @@ examples:
                   - queue/block_workflow
            
   single_concurrency_job:
-    description: Used to ensure that a single job (deploy) is not run concurrently
+    description: |
+      Used to ensure that a only single job (deploy) is not run concurrently. 
+      By default will only queue if the same job from previous worfklows is running on the same branch. 
+      This allows safe jobs like build/test to overlap, minimizing overall queue times.
     usage:
       version: 2.1
       orbs:
