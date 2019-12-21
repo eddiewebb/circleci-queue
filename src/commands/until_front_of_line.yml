@@ -176,6 +176,8 @@ steps:
             if [ $confidence -lt <<parameters.confidence>> ];then
               # To grow confidence, we check again with a delay.
               confidence=$((confidence+1))
+              echo "API shows no previous jobs/workflows, but it is possible a previous workflow has pending jobs not yet visible in API."
+              echo "Rerunning check ${confidence}/<<parameters.confidence>>"
             else
               echo "Front of the line, WooHoo!, Build continuing"
               break
