@@ -13,6 +13,13 @@ function setup {
 
   # the name used in example config files.
   INLINE_ORB_NAME="queue"
+
+
+  if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
+    echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
+  else
+    echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3
+  fi
 }
 
 
