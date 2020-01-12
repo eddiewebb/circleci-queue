@@ -34,8 +34,6 @@ steps:
       name: Queue Until Front of Line
       command: |
 
-        set -x
-        
         load_variables(){
           # just confirm our required variables are present
           : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
