@@ -355,3 +355,25 @@ function setup {
 
 }
 
+
+@test "Default job sets block workflow properly" {
+  # given
+  process_config_with test/inputs/fulljob.yml
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["Single File"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLECI_API_KEY="madethisup"
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="singlejob"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
+
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+  assert_contains_text "Orb parameter block-workflow is true."
+}
