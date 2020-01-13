@@ -13,13 +13,21 @@ function setup {
 
   # the name used in example config files.
   INLINE_ORB_NAME="queue"
+
+
+  if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
+    echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
+  else
+    echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3
+  fi
 }
 
 
 @test "Job: full job expands properly" {
   # given
   process_config_with test/inputs/fulljob.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -43,10 +51,11 @@ function setup {
 }
 
 
-@test "Command: script will proceed with no previous jobs" {
+# See https://github.com/eddiewebb/circleci-queue/issues/26 for explanation of race condition
+@test "Race condition on previous workflow does not fool us" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -61,6 +70,47 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
+
+  # set API Payload to temp location
+  export TESTING_MOCK_RESPONSE=/tmp/dynamic_response.json
+  # set initial response to mimic in-btween race condition, no running jobs
+  cp test/api/jobs/nopreviousjobs.json /tmp/dynamic_response.json
+  # in 11 seconds (> 10) switch to return the running job BACKGROUND PROCESS
+  (sleep 11 && cp test/api/jobs/onepreviousjobsamename.json /tmp/dynamic_response.json) &
+
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Rerunning check 1/1" 
+  assert_contains_text "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (3) to complete."
+  assert_contains_text "Max wait time exceeded"
+  assert_contains_text "Cancelleing build 2"
+  [[ "$status" == "1" ]]
+}
+
+
+@test "Command: script will proceed with no previous jobs" {
+  # given
+  process_config_with test/inputs/command-defaults.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLECI_API_KEY="madethisup"
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="singlejob"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -73,7 +123,8 @@ function setup {
 @test "Command: script will proceed with previous job of different name" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -88,6 +139,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -99,7 +151,8 @@ function setup {
 @test "Command: script will WAIT with previous job of same name" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjobsamename.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -114,6 +167,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -123,10 +177,12 @@ function setup {
   [[ "$status" == "1" ]]
 }
 
+
 @test "Command: script with dont-quit will not fail current job" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjobsamename.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -141,6 +197,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -155,7 +212,8 @@ function setup {
 @test "Command: script will consider branch" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -170,6 +228,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -184,7 +243,8 @@ function setup {
 @test "Command: script will skip queueing on branches that don't match filter" {
   # given
   process_config_with test/inputs/command-filter-branch.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json #Response shouldn't matter as we're ending early
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #Response shouldn't matter as we're ending early
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -199,6 +259,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -211,7 +272,8 @@ function setup {
 @test "Command: script will consider branch default" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -226,6 +288,7 @@ function setup {
   export CIRCLE_PROJECT_USERNAME="madethisup"
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
@@ -239,10 +302,11 @@ function setup {
 
 
 
-@test "Command: script will queue on different job when consider-job is false" {
+@test "Command: script will queue on different job when block-workflow is true" {
   # given
   process_config_with test/inputs/command-non-default.yml
-  export TESTING_MOCK_RESPONSE=test/api/onepreviousjob-differentname.json
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -257,6 +321,7 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 

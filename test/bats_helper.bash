@@ -1,12 +1,19 @@
 #!/bin/bash
 
 
+function process_config_with {
+	append_project_configuration $1 > $INPUT_PROJECT_CONFIG
+ 	circleci config process $INPUT_PROJECT_CONFIG > ${PROCESSED_PROJECT_CONFIG}
+ 	yq read -j ${PROCESSED_PROJECT_CONFIG} > ${JSON_PROJECT_CONFIG}
+
+ 	#assertions use output, tests can override outptu to test additional commands beyond parsing.
+ 	output=`cat  ${PROCESSED_PROJECT_CONFIG}`
+}
+
 function append_project_configuration {
 	if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
-		echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
 		assemble_inline $1
 	else
-		echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3
 		assemble_external $1
 	fi
 }
@@ -39,14 +46,6 @@ function assemble_external {
 	fi
 }
 
-function process_config_with {
-	append_project_configuration $1 > $INPUT_PROJECT_CONFIG
- 	circleci config process $INPUT_PROJECT_CONFIG > ${PROCESSED_PROJECT_CONFIG}
- 	yq read -j ${PROCESSED_PROJECT_CONFIG} > ${JSON_PROJECT_CONFIG}
-
- 	#assertions use output, tests can override outptu to test additional commands beyond parsing.
- 	output=`cat  ${PROCESSED_PROJECT_CONFIG}`
-}
 
 
 #
