@@ -71,8 +71,6 @@ function setup {
   assert_contains_text "Orb parameter block-workflow is true."
 }
 
-
-# See https://github.com/eddiewebb/circleci-queue/issues/26 for explanation of race condition
 @test "Race condition on previous workflow does not fool us" {
   # given
   process_config_with test/inputs/command-defaults.yml

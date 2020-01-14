@@ -88,6 +88,8 @@ jobs:
       - pr-comment
       - store_test_results:
           path: reports
+      - store_artifacts:
+      path: reports
 
   publish:
     docker:
