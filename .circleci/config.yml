@@ -80,7 +80,7 @@ jobs:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
-            export BATS_TEST_LIST=$(bats -l test | cirleci tests split | tr '\n' ' ')
+            export BATS_TEST_LIST=$(bats -l test | circleci tests split | tr '\n' ' ')
             echo "This node will run ${BATS_TEST_LIST}"
             bats test            
       - pr-comment
