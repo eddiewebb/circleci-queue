@@ -32,7 +32,6 @@ function setup {
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
   assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
-
 }
 
 

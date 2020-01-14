@@ -80,10 +80,14 @@ jobs:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
-            export BATS_TEST_LIST=$(bats -l test | circleci tests split | tr '\n' ' ')
+            export BATS_TEST_LIST=$(bats -l test | circleci tests split --split-by=timings | tr '\n' ' ')
             echo "This node will run ${BATS_TEST_LIST}"
-            bats test            
+            mkdir -p reports
+            bats test | tee reports/test-report  
+            bash src/parse-taps.bash reports/test-report >  reports/bats_junit_report.xml        
       - pr-comment
+      - store_test_results:
+          path: reports
 
   publish:
     docker:
