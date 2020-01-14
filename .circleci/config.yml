@@ -23,6 +23,7 @@ workflows:
               only: 
                 - staging
                 - trying
+                - better-testing
       - test:
           requires: 
             - publish_dev
@@ -31,6 +32,7 @@ workflows:
               only: 
                 - staging
                 - trying
+                - better-testing
       - publish:
           requires:
             - test
@@ -69,7 +71,7 @@ jobs:
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
-    parallelism: 4
+    parallelism: 6
     steps:
       - checkout
       - install-circleci
