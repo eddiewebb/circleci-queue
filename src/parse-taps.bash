@@ -1,24 +1,29 @@
 #!/bin/bash
 
-head='<?xml version="1.0"?>\n<testsuite>'
+head='<?xml version="1.0"?>\n<testsuite name="BatsTests" tests="%d">'
 foot='</testsuite>'
 
-test='<testcase file="%s" name="%s" time="%d" />'
+test='<testcase file="%s" classname="%s" time="%d" />'
+
+
+header(){
+	line="$1"
+	count=$(expr "$line" : '1..\([0-9]*\)')
+	printf "$head" $count
+}
 
 parse_it(){
-	$line=$1
 	NAME=$(expr "$line" : '.*ok [0-9]* \(.*\) #time.*')
 	TIME=$(expr "$line" : '.*ok [0-9]*.*\#time=\(.*\)')
 	printf "${test}" "${NAME}" "${NAME}" ${TIME}
 }
 
 
-printf "$head"
 
 while read -r line;do
 	case $line in
-		1..*) continue ;;
-		ok*) parse_it $line;;
+		1..*) header;;
+		ok*) parse_it;;
 		\#*) continue;;
 		*) echo "unkon line" ;;
 	esac
