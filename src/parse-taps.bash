@@ -3,7 +3,7 @@
 head='<?xml version="1.0"?>\n<testsuite>'
 foot='</testsuite>'
 
-test='<testcase name="%s" time="%d" />'
+test='<testcase file="%s" name="%s" time="%d" />'
 
 parse_it(){
 	$line=$1

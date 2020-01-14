@@ -83,6 +83,8 @@ jobs:
             export BATS_TEST_LIST=$(bats -l test | circleci tests split --split-by=timings | tr '\n' ' ')
             echo "This node will run ${BATS_TEST_LIST}"
             mkdir -p reports
+            bats -l test > reports/list
+            bats -l test | circleci tests split --split-by=timings > reports/mylist
             bats test | tee reports/test-report  
             bash src/parse-taps.bash reports/test-report >  reports/bats_junit_report.xml        
       - pr-comment
