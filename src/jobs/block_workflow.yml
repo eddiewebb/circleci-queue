@@ -35,6 +35,7 @@ resource_class: small
 steps:
   - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
+      block-workflow: <<parameters.block-workflow>>
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
       only-on-branch: <<parameters.only-on-branch>>

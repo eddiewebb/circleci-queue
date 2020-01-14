@@ -15,9 +15,17 @@ workflows:
             branches:
               ignore: 
                 - master
-      - test:
+      - publish_dev:
           requires: 
             - validate
+          filters:
+            branches:
+              only: 
+                - staging
+                - trying
+      - test:
+          requires: 
+            - publish_dev
           filters:
             branches:
               only: 
@@ -39,7 +47,7 @@ jobs:
       - checkout
       - install-circleci
       - pack-and-validate
-  test:
+  publish_dev:
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
@@ -56,11 +64,24 @@ jobs:
             echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
             echo $ORB_VERSION
             echo "export PR_MESSAGE=\"BotComment: *Development* version of orb available for manual validation - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
+      
+  test:
+    docker:
+      - image: cimg/base:2019.08
+    working_directory: ~/repo
+    parallelism: 4
+    steps:
+      - checkout
+      - install-circleci
+      - pack-and-validate
+      - pr-info
       - install-bats
       - run:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
+            export BATS_TEST_LIST=$(bats -l test | cirleci split)
+            echo "This node will run ${BATS_TEST_LIST}"
             bats test            
       - pr-comment
 
@@ -101,7 +122,9 @@ commands:
       - run:      
           name: Install BATS (bash testing)
           command: |
-            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
+            # my fork includes tets list for splitting
+            cd /tmp && git clone https://github.com/eddiewebb/bats-core.git && cd bats-core
+            cp 
             ./install.sh /usr/local
       - run:
           name: Install YQ
