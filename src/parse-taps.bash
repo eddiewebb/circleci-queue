@@ -9,7 +9,7 @@ parse_it(){
 	$line=$1
 	NAME=$(expr "$line" : '.*ok [0-9]* \(.*\) #time.*')
 	TIME=$(expr "$line" : '.*ok [0-9]*.*\#time=\(.*\)')
-	printf "${test}" "${NAME}" ${TIME}
+	printf "${test}" "${NAME}" "${NAME}" ${TIME}
 }
 
 
