@@ -71,7 +71,7 @@ jobs:
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
-    parallelism: 12
+    parallelism: 6
     steps:
       - checkout
       - install-circleci
