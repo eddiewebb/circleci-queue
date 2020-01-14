@@ -50,8 +50,6 @@ function setup {
 
 }
 
-
-
 @test "Default job sets block workflow properly" {
   # given
   process_config_with test/inputs/fulljob.yml

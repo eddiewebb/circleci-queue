@@ -80,7 +80,7 @@ jobs:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
-            export BATS_TEST_LIST=$(bats -l test | cirleci split)
+            export BATS_TEST_LIST=$(bats -l test | cirleci tests split | tr '\n' ' ')
             echo "This node will run ${BATS_TEST_LIST}"
             bats test            
       - pr-comment
@@ -124,7 +124,6 @@ commands:
           command: |
             # my fork includes tets list for splitting
             cd /tmp && git clone https://github.com/eddiewebb/bats-core.git && cd bats-core
-            cp 
             ./install.sh /usr/local
       - run:
           name: Install YQ
