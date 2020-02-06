@@ -28,6 +28,10 @@ parameters:
     type: string
     default: "1"
     description: "Due to scarce API, we need to requery the recent jobs list to ensure we're not just in a pending state for previous jobs.  This number indicates the threhold for API returning no previous pending jobs. Default is a single confirmation."
+  circleci-api-key:
+    type: env_var_name
+    default: CIRCLECI_API_KEY
+    description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
 
 docker:
   - image: cimg/base:stable
@@ -41,3 +45,4 @@ steps:
       only-on-branch: <<parameters.only-on-branch>>
       vcs-type: <<parameters.vcs-type>>
       confidence: <<parameters.confidence>>
+      circleci-api-key: <<parameters.circleci-api-key>>
