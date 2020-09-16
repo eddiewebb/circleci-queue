@@ -32,6 +32,10 @@ parameters:
     type: env_var_name
     default: CIRCLECI_API_KEY
     description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  tag-pattern:
+    type: string
+    default: ""
+    description: "Set to queue jobs using a regex pattern f.ex '^v[0-9]+\\.[0-9]+\\.[0-9]+$' to filter CIRCLECI_TAG"
 steps:
   - run:
       name: Queue Until Front of Line
@@ -59,6 +63,9 @@ steps:
           if [ "<<parameters.consider-branch>>" != "true" ];then
             echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
+          elif [[ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
+            echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
           else
             echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
@@ -70,7 +77,11 @@ steps:
             cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
           else
             echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >> is set."
-            curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
+            if [[ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
+              curl -f -s $jobs_api_url_template | jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' > /tmp/jobstatus.json
+            else
+              curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
+            fi
             echo "API access successful"
           fi
         }
