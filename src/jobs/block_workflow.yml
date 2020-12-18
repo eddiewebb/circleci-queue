@@ -32,6 +32,11 @@ parameters:
     type: env_var_name
     default: CIRCLECI_API_KEY
     description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  # RealSelf FIX
+  circle-branch:
+    type: string
+    default: "main"
+    description: "If a tag is released, CIRCLE_BRANCH becomes empty (and CIRCLE_TAG gets a value), breaking the orb. This parameter helps avoid this by setting 'main' as the default value for CIRCLE_BRANCH, giving the flexibility to set it to a different branch if needed."
 
 docker:
   - image: cimg/base:stable
@@ -46,3 +51,5 @@ steps:
       vcs-type: <<parameters.vcs-type>>
       confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
+      # RealSelf FIX
+      circle-branch: <<parameters.circle-branch>>

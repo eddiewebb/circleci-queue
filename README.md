@@ -40,3 +40,21 @@ See https://circleci.com/orbs/registry/orb/eddiewebb/queue#usage-examples for cu
 ## Note
 
 Queueing is not supported on forked repos. If a queue from a fork happens the queue will immediately exit and the next step of the job will begin.
+
+## RealSelf fork changes
+
+Forked `eddiewebb/queue@1.5.0`. Fixed a bug when a git tag is released and the env variable `CIRCLE_BRANCH` is unset. Now there is a parameter `circle-branch` that by default has `main` as value, but can be set to any other branch name so that it doesn't break queueing in non-main branches.
+
+### Deployment steps
+```
+# Pack and validate orb
+brew install circleci
+circleci config pack src/ > pack.yml
+circleci orb validate pack.yml
+
+# Only for first time creation
+circleci orb create realself/upload-source-maps
+
+# Push orb (change version to latest)
+circleci orb publish ./orb.yml realself/queue@1.0.0
+```

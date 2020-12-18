@@ -32,6 +32,11 @@ parameters:
     type: env_var_name
     default: CIRCLECI_API_KEY
     description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  # RealSelf FIX
+  circle-branch: 
+    type: string
+    default: "main"
+    description: "If a tag is released, CIRCLE_BRANCH becomes empty (and CIRCLE_TAG gets a value), breaking the orb. This parameter helps avoid this by setting 'main' as the default value for CIRCLE_BRANCH, giving the flexibility to set it to a different branch if needed."
 steps:
   - run:
       name: Queue Until Front of Line
@@ -44,11 +49,19 @@ steps:
           : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
           : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
           : ${CIRCLE_JOB:?"Required Env Variable not found!"}
+
+          # RealSelf FIX
+          if [ -z "${CIRCLE_BRANCH}" ]; then
+            echo "CIRCLE_BRANCH not set. Using set or default value from parameters: ${<< parameters.circle-branch >>}"
+            CIRCLE_BRANCH="<<parameters.circle-branch>>"
+          fi
           # Only needed for private projects
           if [ -z "${<< parameters.circleci-api-key >>}" ]; then
             echo "<< parameters.circleci-api-key >> not set. Private projects will be inaccessible."
           fi
           VCS_TYPE="<<parameters.vcs-type>>"
+
+
         }
 
 
