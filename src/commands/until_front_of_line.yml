@@ -77,7 +77,7 @@ steps:
 
         fetch_active_workflows(){
           cp /tmp/jobstatus.json /tmp/augmented_jobstatus.json
-          for workflow in `jq -r ".[] | .workflows.workflow_id" /tmp/augmented_jobstatus.json | uniq`
+          for workflow in `jq -r ".[] | .workflows.workflow_id //empty" /tmp/augmented_jobstatus.json | uniq`
           do
             echo "Checking time of workflow: ${workflow}"
             workflow_file=/tmp/workflow-${workflow}.json
