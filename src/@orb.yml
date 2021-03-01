@@ -6,8 +6,8 @@ description: |
   This orb requires the project to have an API key in order to query build states.
   
 display:
-  home_url: https://eddiewebb.github.io/circleci-queue/
-  source_url: https://github.com/eddiewebb/circleci-queue
+  home_url: https://ekulabuhov.github.io/circleci-queue/
+  source_url: https://github.com/ekulabuhov/circleci-queue
 
 examples:
   queue_workflow:
@@ -15,7 +15,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: ekulabuhov/queue@volatile
 
       workflows:
         build_deploy:
@@ -35,7 +35,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: ekulabuhov/queue@volatile
 
       workflows:
         build_deploy:
