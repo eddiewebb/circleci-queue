@@ -77,7 +77,7 @@ steps:
             cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
           else
             echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >> is set."
-            if [[ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
+            if [ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
               curl -f -s $jobs_api_url_template | jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' > /tmp/jobstatus.json
             else
               curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
