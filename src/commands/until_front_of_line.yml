@@ -174,7 +174,7 @@ steps:
           update_comparables
           echo "This Workflow Timestamp: $my_commit_time"
           echo "Oldest Workflow Timestamp: $oldest_commit_time"
-          if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
+          if [[ ! -z "$my_commit_time" ]] && [[ "$oldest_commit_time" > "$my_commit_time" || "$oldest_commit_time" = "$my_commit_time" ]] ; then
             # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical string compare is accurate to timestamp compare as well
             # recent-jobs API does not include pending, so it is posisble we queried in between a workfow transition, and we;re NOT really front of line.
             if [ $confidence -lt <<parameters.confidence>> ];then
@@ -187,6 +187,8 @@ steps:
               break
             fi
           else
+            # If we fail, reset confidence
+            confidence=0
             echo "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (${oldest_running_build_num}) to complete."
             echo "Total Queue time: ${wait_time} seconds."
           fi
