@@ -11,7 +11,7 @@ parameters:
   time:
     type: string
     default: "10"
-    description: "How long to wait before giving up."
+    description: "How many minutes to wait before giving up."
   dont-quit:
     type: boolean
     default: false
