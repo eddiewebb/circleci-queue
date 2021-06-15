@@ -1,6 +1,10 @@
 ---
-name : Bug
+name: Bug
 about: A technical problem
+title: "[semver:patch] DESCRIPTION OF BUG"
+labels: ''
+assignees: ''
+
 ---
 
 ### Orb version
