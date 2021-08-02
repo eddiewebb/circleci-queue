@@ -15,7 +15,7 @@ parameters:
   dont-quit:
     type: boolean
     default: false
-    description: "Quiting is for losers. Force job through once time expires instead of failing."
+    description: "Quitting is for losers. Force job through once time expires instead of failing."
   only-on-branch:
     type: string
     default: "*"
