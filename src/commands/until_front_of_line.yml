@@ -63,7 +63,7 @@ steps:
           if [ "<<parameters.consider-branch>>" != "true" ];then
             echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
-          elif [[ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
+          elif [ -n "${CIRCLE_TAG:x}" && "<<parameters.tag-pattern>>" != "" ]; then
             echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
           else
