@@ -15,7 +15,7 @@ workflows:
             branches:
               ignore: 
                 - master
-      - test:
+      - publish_dev:
           requires: 
             - validate
           filters:
@@ -23,6 +23,16 @@ workflows:
               only: 
                 - staging
                 - trying
+                - better-testing
+      - test:
+          requires: 
+            - publish_dev
+          filters:
+            branches:
+              only: 
+                - staging
+                - trying
+                - better-testing
       - publish:
           requires:
             - test
@@ -39,7 +49,7 @@ jobs:
       - checkout
       - install-circleci
       - pack-and-validate
-  test:
+  publish_dev:
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
@@ -51,18 +61,39 @@ jobs:
       - run:
           name: Publish Dev
           command: |
-            PUBLISH_MESSAGE=`circleci orb publish packed.yml eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER} --token ${CIRCLECI_API_KEY}`
+            PUBLISH_MESSAGE=`circleci orb publish packed.yml eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER:-${CIRCLE_BRANCH}} --token ${CIRCLECI_API_KEY}`
             ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
             echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
             echo $ORB_VERSION
             echo "export PR_MESSAGE=\"BotComment: *Development* version of orb available for manual validation - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
+      
+  test:
+    docker:
+      - image: cimg/base:2019.08
+    working_directory: ~/repo
+    parallelism: 6
+    steps:
+      - checkout
+      - install-circleci
+      - pack-and-validate
+      - pr-info
       - install-bats
       - run:
           name: Import Tests using BATS
           command: |
-            export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER}"
-            bats test            
+            export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:${PR_NUMBER:-${CIRCLE_BRANCH}}"
+            export BATS_TEST_LIST=$(bats -l test | circleci tests split --split-by=timings | tr '\n' ' ')
+            echo "This node will run ${BATS_TEST_LIST}"
+            mkdir -p reports
+            bats -l test > reports/list
+            bats -l test | circleci tests split --split-by=timings > reports/mylist
+            bats test | tee reports/test-report  
+            bash src/parse-taps.bash reports/test-report >  reports/bats_junit_report.xml        
       - pr-comment
+      - store_test_results:
+          path: reports
+      - store_artifacts:
+          path: reports
 
   publish:
     docker:
@@ -101,7 +132,8 @@ commands:
       - run:      
           name: Install BATS (bash testing)
           command: |
-            cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
+            # my fork includes tets list for splitting
+            cd /tmp && git clone https://github.com/eddiewebb/bats-core.git && cd bats-core
             ./install.sh /usr/local
       - run:
           name: Install YQ
