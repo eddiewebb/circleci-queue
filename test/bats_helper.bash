@@ -4,7 +4,7 @@
 function process_config_with {
 	append_project_configuration $1 > $INPUT_PROJECT_CONFIG
  	circleci config process $INPUT_PROJECT_CONFIG > ${PROCESSED_PROJECT_CONFIG}
- 	yq read -j ${PROCESSED_PROJECT_CONFIG} > ${JSON_PROJECT_CONFIG}
+ 	yq eval -o=j ${PROCESSED_PROJECT_CONFIG} > ${JSON_PROJECT_CONFIG}
 
  	#assertions use output, tests can override outptu to test additional commands beyond parsing.
  	output=`cat  ${PROCESSED_PROJECT_CONFIG}`

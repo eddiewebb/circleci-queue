@@ -16,6 +16,7 @@ workflows:
               ignore: 
                 - master
       - test:
+          context: [orbs]
           requires: 
             - validate
           filters:
@@ -24,6 +25,7 @@ workflows:
                 - staging
                 - trying
       - publish:
+          context: [orbs]
           requires:
             - test
           filters:
@@ -106,7 +108,7 @@ commands:
       - run:
           name: Install YQ
           command: |
-            curl -L https://github.com/mikefarah/yq/releases/download/2.1.1/yq_linux_amd64 -o yq
+            curl -L https://github.com/mikefarah/yq/releases/download/v4.14.1/yq_linux_amd64 -o yq
             chmod a+x yq
             mv yq /usr/local/bin/            
   install-circleci:
