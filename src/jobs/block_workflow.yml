@@ -11,11 +11,11 @@ parameters:
   time:
     type: string
     default: "10"
-    description: "How long to wait before giving up."
+    description: "How many minutes to wait before giving up."
   dont-quit:
     type: boolean
     default: false
-    description: "Quiting is for losers. Force job through once time expires instead of failing."
+    description: "Quitting is for losers. Force job through once time expires instead of failing."
   only-on-branch:
     type: string
     default: "*"
@@ -28,6 +28,10 @@ parameters:
     type: string
     default: "1"
     description: "Due to scarce API, we need to requery the recent jobs list to ensure we're not just in a pending state for previous jobs.  This number indicates the threhold for API returning no previous pending jobs. Default is a single confirmation."
+  circleci-api-key:
+    type: env_var_name
+    default: CIRCLECI_API_KEY
+    description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
 
 docker:
   - image: cimg/base:stable
@@ -35,8 +39,10 @@ resource_class: small
 steps:
   - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
+      block-workflow: <<parameters.block-workflow>>
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
       only-on-branch: <<parameters.only-on-branch>>
       vcs-type: <<parameters.vcs-type>>
       confidence: <<parameters.confidence>>
+      circleci-api-key: <<parameters.circleci-api-key>>

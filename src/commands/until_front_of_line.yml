@@ -11,7 +11,7 @@ parameters:
   time:
     type: string
     default: "10"
-    description: "How long to wait before giving up."
+    description: "How many minutes to wait before giving up."
   dont-quit:
     type: boolean
     default: false
@@ -28,6 +28,14 @@ parameters:
     type: string
     default: "1"
     description: "Due to scarce API, we need to requery the recent jobs list to ensure we're not just in a pending state for previous jobs.  This number indicates the threhold for API returning no previous pending jobs. Default is a single confirmation."
+  circleci-api-key:
+    type: env_var_name
+    default: CIRCLECI_API_KEY
+    description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  tag-pattern:
+    type: string
+    default: ""
+    description: "Set to queue jobs using a regex pattern f.ex '^v[0-9]+\\.[0-9]+\\.[0-9]+$' to filter CIRCLECI_TAG"
 steps:
   - run:
       name: Queue Until Front of Line
@@ -41,8 +49,8 @@ steps:
           : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
           : ${CIRCLE_JOB:?"Required Env Variable not found!"}
           # Only needed for private projects
-          if [ -z "$CIRCLECI_API_KEY" ]; then
-            echo "CIRCLECI_API_KEY not set. Private projects will be inaccessible."
+          if [ -z "${<< parameters.circleci-api-key >>}" ]; then
+            echo "<< parameters.circleci-api-key >> not set. Private projects will be inaccessible."
           else
             fetch "https://circleci.com/api/v2/me" "/tmp/me.cci"
             me=$(jq -e '.id' /tmp/me.cci)
@@ -65,11 +73,15 @@ steps:
 
         fetch_filtered_active_builds(){
           if [ "<<parameters.consider-branch>>" != "true" ];then
-            echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
+            echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch." 
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
+          elif [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
+            # I'm not sure why this is here, seems identical to above?
+            echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           else
-            echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
+            echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=running"
           fi
 
@@ -77,14 +89,19 @@ steps:
             echo "Using test mock response"
             cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
           else
-            echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your CIRCLECI_API_KEY is set."
+            echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >>  is set."
             fetch "$jobs_api_url_template" "/tmp/jobstatus.json"
+            if [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
+              jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' /tmp/jobstatus.json > /tmp/jobstatus_tag.json
+              mv /tmp/jobstatus_tag.json /tmp/jobstatus.json
+            fi
+            echo "API access successful"
           fi
         }
 
         fetch_active_workflows(){
           cp /tmp/jobstatus.json /tmp/augmented_jobstatus.json
-          for workflow in `jq -r ".[] | .workflows.workflow_id" /tmp/augmented_jobstatus.json | uniq`
+          for workflow in `jq -r ".[] | .workflows.workflow_id //empty" /tmp/augmented_jobstatus.json | uniq`
           do
             echo "Checking time of workflow: ${workflow}"
             workflow_file=/tmp/workflow-${workflow}.json
@@ -141,7 +158,7 @@ steps:
 
         cancel_current_build(){
           echo "Cancelleing build ${CIRCLE_BUILD_NUM}"
-          cancel_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${CIRCLECI_API_KEY}"
+          cancel_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${<< parameters.circleci-api-key >>}"
           curl -s -X POST $cancel_api_url_template > /dev/null
         }
 
@@ -172,7 +189,7 @@ steps:
         wait_time=0
         loop_time=11
         max_time_seconds=$((max_time * 60))
-       
+
         #
         # Queue Loop
         #
@@ -181,7 +198,7 @@ steps:
           update_comparables
           echo "This Workflow Timestamp: $my_commit_time"
           echo "Oldest Workflow Timestamp: $oldest_commit_time"
-          if [[ "$oldest_commit_time" > "$my_commit_time" ]] || [[ "$oldest_commit_time" = "$my_commit_time" ]] ; then
+          if [[ ! -z "$my_commit_time" ]] && [[ "$oldest_commit_time" > "$my_commit_time" || "$oldest_commit_time" = "$my_commit_time" ]] ; then
             # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical string compare is accurate to timestamp compare as well
             # recent-jobs API does not include pending, so it is posisble we queried in between a workfow transition, and we;re NOT really front of line.
             if [ $confidence -lt <<parameters.confidence>> ];then
@@ -194,6 +211,8 @@ steps:
               break
             fi
           else
+            # If we fail, reset confidence
+            confidence=0
             echo "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (${oldest_running_build_num}) to complete."
             echo "Total Queue time: ${wait_time} seconds."
           fi
