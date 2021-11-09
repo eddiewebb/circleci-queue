@@ -16,6 +16,7 @@ workflows:
               ignore: 
                 - master
       - test:
+          context: [orbs]
           requires: 
             - validate
           filters:
@@ -24,6 +25,7 @@ workflows:
                 - staging
                 - trying
       - publish:
+          context: [orbs]
           requires:
             - test
           filters:
