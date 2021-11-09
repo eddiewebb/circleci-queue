@@ -96,7 +96,7 @@ steps:
               echo "Using test mock workflow response"
               cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json > ${workflow_file}
             else
-              curl -f -s "https://circleci.com/api/v2/workflow/${workflow}?circle-token=${<< parameters.circleci-api-key >>}" > ${workflow_file}
+              fetch "https://circleci.com/api/v2/workflow/${workflow}" "${workflow_file}"
             fi
             created_at=`jq -r '.created_at' ${workflow_file}`
             echo "Workflow was created at: ${created_at}"
