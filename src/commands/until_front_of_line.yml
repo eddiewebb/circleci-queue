@@ -51,36 +51,49 @@ steps:
           # Only needed for private projects
           if [ -z "${<< parameters.circleci-api-key >>}" ]; then
             echo "<< parameters.circleci-api-key >> not set. Private projects will be inaccessible."
+          else
+            fetch "https://circleci.com/api/v2/me" "/tmp/me.cci"
+            me=$(jq -e '.id' /tmp/me.cci)
+            echo "Using API key for user: ${me}"
           fi
           VCS_TYPE="<<parameters.vcs-type>>"
         }
 
-
-
-
+        fetch(){
+          url=$1
+          target=$2
+          http_response=$(curl -f -s -X GET -H "Circle-Token:${CIRCLECI_API_KEY}" -o "${target}" -w "%{http_code}" "${url}")
+          if [ $http_response != "200" ]; then
+              echo "ERROR: Server returned error code: $http_response"
+              cat ${target}
+          else
+              echo "DEBUG: API Success"
+          fi
+        }
 
         fetch_filtered_active_builds(){
           if [ "<<parameters.consider-branch>>" != "true" ];then
-            echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
-            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
+            echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch." 
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           elif [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
+            # I'm not sure why this is here, seems identical to above?
             echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
-            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           else
-            echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
-            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?circle-token=${<< parameters.circleci-api-key >>}&filter=running"
+            echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=running"
           fi
 
           if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
             echo "Using test mock response"
             cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
           else
-            echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >> is set."
+            echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >>  is set."
+            fetch "$jobs_api_url_template" "/tmp/jobstatus.json"
             if [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
-              curl -f -s $jobs_api_url_template | jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' > /tmp/jobstatus.json
-            else
-              curl -f -s $jobs_api_url_template > /tmp/jobstatus.json
+              jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' /tmp/jobstatus.json > /tmp/jobstatus_tag.json
+              mv /tmp/jobstatus_tag.json /tmp/jobstatus.json
             fi
             echo "API access successful"
           fi
