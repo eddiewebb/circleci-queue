@@ -60,6 +60,7 @@ steps:
         }
 
         fetch(){
+          echo "DEBUG: Making API Call to ${1}"
           url=$1
           target=$2
           http_response=$(curl -f -s -X GET -H "Circle-Token:${CIRCLECI_API_KEY}" -o "${target}" -w "%{http_code}" "${url}")
