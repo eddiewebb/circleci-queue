@@ -41,6 +41,19 @@ steps:
       name: Queue Until Front of Line
       command: |
 
+        fetch(){
+          echo "DEBUG: Making API Call to ${1}"
+          url=$1
+          target=$2
+          http_response=$(curl -f -s -X GET -H "Circle-Token:${CIRCLECI_API_KEY}" -o "${target}" -w "%{http_code}" "${url}")
+          if [ $http_response != "200" ]; then
+              echo "ERROR: Server returned error code: $http_response"
+              cat ${target}
+          else
+              echo "DEBUG: API Success"
+          fi
+        }
+        
         load_variables(){
           # just confirm our required variables are present
           : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
@@ -59,18 +72,6 @@ steps:
           VCS_TYPE="<<parameters.vcs-type>>"
         }
 
-        fetch(){
-          echo "DEBUG: Making API Call to ${1}"
-          url=$1
-          target=$2
-          http_response=$(curl -f -s -X GET -H "Circle-Token:${CIRCLECI_API_KEY}" -o "${target}" -w "%{http_code}" "${url}")
-          if [ $http_response != "200" ]; then
-              echo "ERROR: Server returned error code: $http_response"
-              cat ${target}
-          else
-              echo "DEBUG: API Success"
-          fi
-        }
 
         fetch_filtered_active_builds(){
           if [ "<<parameters.consider-branch>>" != "true" ];then
