@@ -9,6 +9,8 @@ description: |
   1.6.1: fixes issue in tag matching , thanks @calvin-summer
   1.6.0: Support Tags, thanks @nikolaik, @dunial
   1.5.0: API variables name as parameter , thanks @philnielson
+  1.4.4: Docs improvements, thanks @jordan-brough
+  1.4.3: more confident confidence thanks @GreshamDanielStephens
   1.4.2: Doc improvements, thanks @olleolleolle
   1.4.1: fixes bug in block-workflow as job. thanks @mu-bro
   1.4.0: Adds confidence checks to avoid race condition 
