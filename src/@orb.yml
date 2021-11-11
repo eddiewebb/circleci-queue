@@ -4,6 +4,18 @@ description: |
   This is ideal for deployments or other activities that must not run concurrently.
   May optionaly consider branch-level isolation if unique branches should run concurrently. 
   This orb requires the project to have an API key in order to query build states.
+
+  1.6.3: addresses API changes that broke branch-job queueing, adds more API checks
+  1.6.1: fixes issue in tag matching , thanks @calvin-summer
+  1.6.0: Support Tags, thanks @nikolaik, @dunial
+  1.5.0: API variables name as parameter , thanks @philnielson
+  1.4.2: Doc improvements, thanks @olleolleolle
+  1.4.1: fixes bug in block-workflow as job. thanks @mu-bro
+  1.4.0: Adds confidence checks to avoid race condition 
+  1.3.0: use small resource class in job
+
+
+
   
 display:
   home_url: https://eddiewebb.github.io/circleci-queue/
