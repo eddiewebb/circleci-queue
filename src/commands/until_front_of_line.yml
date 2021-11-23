@@ -100,7 +100,7 @@ steps:
             echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >>  is set."
             fetch "$jobs_api_url_template" "/tmp/jobstatus.json"
             if [ -n "${CIRCLE_TAG:x}" ] && [ "$tag_pattern" != "" ]; then
-              jq "[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test(\"$tag_pattern\") ) ]" /tmp/jobstatus.json > /tmp/jobstatus_tag.json
+              jq "[ .[] | select((.build_num | . == \"${CIRCLE_BUILD_NUM}\") or (.vcs_tag | (. != null and test(\"${tag_pattern}\"))) ) ]" /tmp/jobstatus.json >/tmp/jobstatus_tag.json
               mv /tmp/jobstatus_tag.json /tmp/jobstatus.json
             fi
             echo "API access successful"
