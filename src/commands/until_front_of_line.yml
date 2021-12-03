@@ -40,6 +40,12 @@ steps:
   - run:
       name: Queue Until Front of Line
       command: |
+        tag_pattern="<<parameters.tag-pattern>>"
+
+        # If a pattern is wrapped with slashes, remove them.
+        if [[ "$tag_pattern" == /*/ ]]; then
+          tag_pattern=${tag_pattern:1:-1}
+        fi
 
         fetch(){
           echo "DEBUG: Making API Call to ${1}"
@@ -77,7 +83,7 @@ steps:
           if [ "<<parameters.consider-branch>>" != "true" ];then
             echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch." 
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
-          elif [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
+          elif [ -n "${CIRCLE_TAG:x}" ] && [ "$tag_pattern" != "" ]; then
             # I'm not sure why this is here, seems identical to above?
             echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
@@ -93,8 +99,8 @@ steps:
           else
             echo "Attempting to access CircleCI api. If the build process fails after this step, ensure your << parameters.circleci-api-key >>  is set."
             fetch "$jobs_api_url_template" "/tmp/jobstatus.json"
-            if [ -n "${CIRCLE_TAG:x}" ] && [ "<<parameters.tag-pattern>>" != "" ]; then
-              jq '[ .[] | select(.vcs_tag | . != null) | select(.vcs_tag | test("<<parameters.tag-pattern>>") ) ]' /tmp/jobstatus.json > /tmp/jobstatus_tag.json
+            if [ -n "${CIRCLE_TAG:x}" ] && [ "$tag_pattern" != "" ]; then
+              jq "[ .[] | select((.build_num | . == \"${CIRCLE_BUILD_NUM}\") or (.vcs_tag | (. != null and test(\"${tag_pattern}\"))) ) ]" /tmp/jobstatus.json >/tmp/jobstatus_tag.json
               mv /tmp/jobstatus_tag.json /tmp/jobstatus.json
             fi
             echo "API access successful"
