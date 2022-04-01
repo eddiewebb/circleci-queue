@@ -36,6 +36,10 @@ parameters:
     type: string
     default: ""
     description: "Set to queue jobs using a regex pattern f.ex '^v[0-9]+\\.[0-9]+\\.[0-9]+$' to filter CIRCLECI_TAG"
+  branch-regex:
+    type: string
+    default: ""
+    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'
 steps:
   - run:
       name: Queue Until Front of Line
@@ -134,6 +138,11 @@ steps:
           fetch_active_workflows
 
           load_current_workflow_values
+          
+          job_name="${CIRCLE_JOB}"
+          if [ "<<parameters.job_regex>>" ] ;then
+            job_name="<<parameters.job_regex>>"
+          fi
 
           # falsey parameters are empty strings, so always compare against 'true' 
           if [ "<<parameters.block-workflow>>" = "true" ] ;then
@@ -143,9 +152,9 @@ steps:
             oldest_commit_time=`jq 'sort_by(.workflows.created_at)| .[0].workflows.created_at' /tmp/augmented_jobstatus.json`
           else
             echo "Orb parameter block-workflow is false."
-            echo "Only blocking execution if running previous jobs matching this job: ${CIRCLE_JOB}"
-            oldest_running_build_num=`jq ". | map(select(.workflows.job_name==\"${CIRCLE_JOB}\")) | sort_by(.workflows.created_at)|  .[0].build_num" /tmp/augmented_jobstatus.json`
-            oldest_commit_time=`jq ". | map(select(.workflows.job_name==\"${CIRCLE_JOB}\")) | sort_by(.workflows.created_at)|  .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
+            echo "Only blocking execution if running previous jobs matching this job: $job_name"
+            oldest_running_build_num=`jq ". | map(select(.workflows.job_name==\"$job_name\")) | sort_by(.workflows.created_at)|  .[0].build_num" /tmp/augmented_jobstatus.json`
+            oldest_commit_time=`jq ". | map(select(.workflows.job_name==\"$job_name\")) | sort_by(.workflows.created_at)|  .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
           fi
           if [ -z "$oldest_commit_time" ]; then
             echo "API Error - unable to load previous job timings. Report to developer."
