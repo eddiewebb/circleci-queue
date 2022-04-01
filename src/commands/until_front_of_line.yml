@@ -39,7 +39,7 @@ parameters:
   job-regex:
     type: string
     default: ""
-    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'
+    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
 steps:
   - run:
       name: Queue Until Front of Line
