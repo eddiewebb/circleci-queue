@@ -140,8 +140,8 @@ steps:
           load_current_workflow_values
           
           job_name="${CIRCLE_JOB}"
-          if [ "<<parameters.job_regex>>" ] ;then
-            job_name="<<parameters.job_regex>>"
+          if [ "<<parameters.job-regex>>" ] ;then
+            job_name="<<parameters.job-regex>>"
           fi
 
           # falsey parameters are empty strings, so always compare against 'true' 
