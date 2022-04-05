@@ -139,9 +139,9 @@ steps:
 
           load_current_workflow_values
           
-          job_name="${CIRCLE_JOB}"
+          JOB_NAME="${CIRCLE_JOB}"
           if [ "<<parameters.job-regex>>" ] ;then
-            job_name="<<parameters.job-regex>>"
+            JOB_NAME="<<parameters.job-regex>>"
           fi
 
           # falsey parameters are empty strings, so always compare against 'true' 
@@ -152,9 +152,9 @@ steps:
             oldest_commit_time=`jq 'sort_by(.workflows.created_at)| .[0].workflows.created_at' /tmp/augmented_jobstatus.json`
           else
             echo "Orb parameter block-workflow is false."
-            echo "Only blocking execution if running previous jobs matching this job: $job_name"
-            oldest_running_build_num=`jq ". | map(select(.workflows.job_name | grep -Eq $job_name)) | sort_by(.workflows.created_at)|  .[0].build_num" /tmp/augmented_jobstatus.json`
-            oldest_commit_time=`jq ". | map(select(.workflows.job_name | grep -Eq $job_name)) | sort_by(.workflows.created_at)|  .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
+            echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
+            oldest_running_build_num=`jq ". | map(select(.workflows.job_name | grep -Eq ${JOB_NAME})) | sort_by(.workflows.created_at)|  .[0].build_num" /tmp/augmented_jobstatus.json`
+            oldest_commit_time=`jq ". | map(select(.workflows.job_name | grep -Eq ${JOB_NAME})) | sort_by(.workflows.created_at)|  .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
           fi
           if [ -z "$oldest_commit_time" ]; then
             echo "API Error - unable to load previous job timings. Report to developer."
