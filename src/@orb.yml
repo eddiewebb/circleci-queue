@@ -86,14 +86,33 @@ examples:
       workflows:
         build_deploy:
           jobs:
-            - queue/block_workflow:
-                name: conductor
-                time: "10"                
-                only-on-branch: master  
-                job-regex: "^DeployStep[0-9]$"
+            - build
             - DeployStep1:
-                requires: conductor
+                requires:
+                  - build
             - DeployStep2:
-                requires: conductor
-            - SomeOtherLongJobWeDontCareAbout
+                requires:
+                  - DeployStep1
+      jobs:
+        build:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - run: echo "This job can overlap"
+
+        DeployStep1:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - queue/until_front_of_line:
+                time: "10"               
+                only-on-branch: master  
+                job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 
+            - run: echo "This job will not overlap with itself or next similar nameds job"
+
+        DeployStep2:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - run: echo "This job will block step1 on any further workflows"
 
