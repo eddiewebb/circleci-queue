@@ -32,6 +32,10 @@ parameters:
     type: env_var_name
     default: CIRCLECI_API_KEY
     description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  job-regex:
+    type: string
+    default: ""
+    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
 
 docker:
   - image: cimg/base:stable
@@ -46,3 +50,4 @@ steps:
       vcs-type: <<parameters.vcs-type>>
       confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
+      job-regex: <<parameters.job-regex>>

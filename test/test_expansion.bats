@@ -51,6 +51,62 @@ function setup {
 }
 
 
+@test "Command: script will NOT WAIT with previous job of non matching names when using regexp" {
+  # given
+  process_config_with test/inputs/command-job-regexp-nomatch.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="DeployJob1"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="master"
+  export CIRCLE_PR_REPONAME=""
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Front of the line, WooHoo!, Build continuing"
+  [[ "$status" == "0" ]]
+}
+
+@test "Command: script will WAIT with previous job of similar name used in regexp" {
+  # given
+  process_config_with test/inputs/command-job-regexp.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="DeployJob1"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="master"
+  export CIRCLE_PR_REPONAME=""
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max wait time exceeded"
+  assert_contains_text "Cancelleing build 2"
+  [[ "$status" == "1" ]]
+}
+
+
 # See https://github.com/eddiewebb/circleci-queue/issues/26 for explanation of race condition
 @test "Race condition on previous workflow does not fool us" {
   # given
@@ -63,7 +119,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -103,7 +158,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -132,7 +186,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -160,7 +213,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -190,7 +242,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -221,7 +272,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_BRANCH="somespecialbranch"
   export CIRCLE_JOB="singlejob"
@@ -252,7 +302,6 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_BRANCH="dev"
   export CIRCLE_JOB="singlejob"
@@ -281,7 +330,7 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
+  
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_BRANCH="somespecialbranch"
   export CIRCLE_JOB="singlejob"
@@ -314,7 +363,7 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
+  
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -341,7 +390,7 @@ function setup {
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
+  
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -358,6 +407,8 @@ function setup {
 
 @test "Default job sets block workflow properly" {
   # given
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
   process_config_with test/inputs/fulljob.yml
 
   # when
@@ -366,7 +417,7 @@ function setup {
 
   jq -r '.jobs["Single File"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  export CIRCLECI_API_KEY="madethisup"
+  
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="singlejob"
   export CIRCLE_PROJECT_USERNAME="madethisup"

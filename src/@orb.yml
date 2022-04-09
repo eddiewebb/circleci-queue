@@ -6,6 +6,10 @@ description: |
   This orb requires the project to have an API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
+
+  1.7.0: adds regexp for job names, collab with @jonesie100
+  1.6.5: docs contribution by @pwilczynskiclearcode 
+  1.6.4: support slashes in Tags, thanks @dunial
   1.6.3: addresses API changes that broke branch-job queueing, adds more API checks
   1.6.1: fixes issue in tag matching , thanks @calvin-summer
   1.6.0: Support Tags, thanks @nikolaik, @dunial
@@ -74,3 +78,44 @@ examples:
                 time: "10"                # max wait, in minutes (default 10)
                 only-on-branch: master  # restrict queueing to a specific branch (default *)
             - run: echo "This job will not overlap"
+  
+  multiple_job_names_regexp:
+    description: Use regexp-jobname when you have multiple jobs to block order of.
+    usage:
+      version: 2.1
+      orbs:
+        queue: eddiewebb/queue@volatile
+
+      workflows:
+        build_deploy:
+          jobs:
+            - build
+            - DeployStep1:
+                requires:
+                  - build
+            - DeployStep2:
+                requires:
+                  - DeployStep1
+      jobs:
+        build:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - run: echo "This job can overlap"
+
+        DeployStep1:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - queue/until_front_of_line:
+                time: "10"               
+                only-on-branch: master  
+                job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 
+            - run: echo "This job will not overlap with itself or next similar nameds job"
+
+        DeployStep2:
+          docker:
+            - image: circleci/node:10
+          steps:
+            - run: echo "This job will block step1 on any further workflows"
+
