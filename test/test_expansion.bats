@@ -407,6 +407,8 @@ function setup {
 
 @test "Default job sets block workflow properly" {
   # given
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
   process_config_with test/inputs/fulljob.yml
 
   # when
