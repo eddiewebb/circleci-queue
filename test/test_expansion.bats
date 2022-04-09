@@ -51,6 +51,35 @@ function setup {
 }
 
 
+@test "Command: script will WAIT with previous job of similar name used in regexp" {
+  # given
+  process_config_with test/inputs/command-job-regexp.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="DeployJob1"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="master"
+  export CIRCLE_PR_REPONAME=""
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max wait time exceeded"
+  assert_contains_text "Cancelleing build 2"
+  [[ "$status" == "1" ]]
+}
+
+
 # See https://github.com/eddiewebb/circleci-queue/issues/26 for explanation of race condition
 @test "Race condition on previous workflow does not fool us" {
   # given
