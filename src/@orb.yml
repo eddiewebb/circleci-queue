@@ -6,7 +6,10 @@ description: |
   This orb requires the project to have an API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
-  1.6.4: adds regexp for job names
+
+  1.7.0: adds regexp for job names, collab with @jonesie100
+  1.6.5: docs contribution by @pwilczynskiclearcode 
+  1.6.4: support slashes in Tags, thanks @dunial
   1.6.3: addresses API changes that broke branch-job queueing, adds more API checks
   1.6.1: fixes issue in tag matching , thanks @calvin-summer
   1.6.0: Support Tags, thanks @nikolaik, @dunial
