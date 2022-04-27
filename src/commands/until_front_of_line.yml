@@ -55,13 +55,17 @@ steps:
           echo "DEBUG: Making API Call to ${1}"
           url=$1
           target=$2
-          http_response=$(curl -f -s -X GET -H "Circle-Token:${<< parameters.circleci-api-key >>}" -o "${target}" -w "%{http_code}" "${url}")
-          if [ $http_response != "200" ]; then
+          http_response=$(curl -s -X GET -H "Circle-Token:${<< parameters.circleci-api-key >>}" -o "${target}" -w "%{http_code}" "${url}")
+          if [ $http_response == "404" ]; then
+            echo "DEBUG: API Not found"
+          else
+            if [ $http_response != "200" ]; then
               echo "ERROR: Server returned error code: $http_response"
               cat ${target}
               exit 1
-          else
+            else
               echo "DEBUG: API Success"
+            fi
           fi
         }
 
@@ -125,11 +129,15 @@ steps:
               fetch "https://circleci.com/api/v2/workflow/${workflow}" "${workflow_file}"
             fi
             created_at=`jq -r '.created_at' ${workflow_file}`
-            echo "Workflow was created at: ${created_at}"
-            cat /tmp/augmented_jobstatus.json | jq --arg created_at "${created_at}" --arg workflow "${workflow}" '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {created_at:$created_at}' > /tmp/augmented_jobstatus-${workflow}.json
-            #DEBUG echo "new augmented_jobstatus:"
-            #DEBUG cat /tmp/augmented_jobstatus-${workflow}.json
-            mv /tmp/augmented_jobstatus-${workflow}.json /tmp/augmented_jobstatus.json
+            if [ $created_at != "null" ]; then
+              echo "Workflow was created at: ${created_at}"
+              cat /tmp/augmented_jobstatus.json | jq --arg created_at "${created_at}" --arg workflow "${workflow}" '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {created_at:$created_at}' > /tmp/augmented_jobstatus-${workflow}.json
+              #DEBUG echo "new augmented_jobstatus:"
+              #DEBUG cat /tmp/augmented_jobstatus-${workflow}.json
+              mv /tmp/augmented_jobstatus-${workflow}.json /tmp/augmented_jobstatus.json
+            else
+              echo "Workflow not found: ${workflow}"
+            fi
           done
         }
 
