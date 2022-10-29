@@ -7,6 +7,9 @@ description: |
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
 
+  1.8.1: Adds content-type header to API calls (@kevinr-electric) and prints message on error (@AlexMeuer)
+  1.8.0: minor fix same as version 1.8.0 (missing docs)
+  1.7.1: patch fix same as version 1.8.1 to catch folsk who dont update
   1.7.0: adds regexp for job names, collab with @jonesie100
   1.6.5: docs contribution by @pwilczynskiclearcode 
   1.6.4: support slashes in Tags, thanks @dunial
