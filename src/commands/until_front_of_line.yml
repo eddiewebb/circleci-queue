@@ -55,7 +55,7 @@ steps:
           echo "DEBUG: Making API Call to ${1}"
           url=$1
           target=$2
-          http_response=$(curl -f -s -X GET -H "Circle-Token:${<< parameters.circleci-api-key >>}" -H "Content-Type: application/json" -o "${target}" -w "%{http_code}" "${url}")
+          http_response=$(curl -s -X GET -H "Circle-Token:${<< parameters.circleci-api-key >>}" -H "Content-Type: application/json" -o "${target}" -w "%{http_code}" "${url}")
           if [ $http_response != "200" ]; then
               echo "ERROR: Server returned error code: $http_response"
               cat ${target}
