@@ -87,17 +87,14 @@ steps:
         fetch_filtered_active_builds(){
           if [ "<<parameters.consider-branch>>" != "true" ];then
             echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch."
-# any branch builds
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           elif [ -n "${CIRCLE_TAG:x}" ] && [ "$tag_pattern" != "" ]; then
             # I'm not sure why this is here, seems identical to above?
             echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
-# any branch builds
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           else
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
             echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
-# specific branch builds
             jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=running"
           fi
 
@@ -125,7 +122,6 @@ steps:
               echo "Using test mock workflow response"
               cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json > ${workflow_file}
             else
-# uses V2 API to check workflow status
               fetch "https://circleci.com/api/v2/workflow/${workflow}" "${workflow_file}"
             fi
             created_at=`jq -r '.created_at' ${workflow_file}`
