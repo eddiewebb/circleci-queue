@@ -1,8 +1,8 @@
 version: 2.1
 description: |
-  Allows jobs or entire workflows to be queued to ensure they run in serial.  
+  Allows jobs or entire workflows to be queued to ensure they run in serial.
   This is ideal for deployments or other activities that must not run concurrently.
-  May optionaly consider branch-level isolation if unique branches should run concurrently. 
+  May optionaly consider branch-level isolation if unique branches should run concurrently.
   This orb requires the project to have an API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
@@ -11,7 +11,7 @@ description: |
   1.8.0: minor fix same as version 1.8.0 (missing docs)
   1.7.1: patch fix same as version 1.8.1 to catch folsk who dont update
   1.7.0: adds regexp for job names, collab with @jonesie100
-  1.6.5: docs contribution by @pwilczynskiclearcode 
+  1.6.5: docs contribution by @pwilczynskiclearcode
   1.6.4: support slashes in Tags, thanks @dunial
   1.6.3: addresses API changes that broke branch-job queueing, adds more API checks
   1.6.1: fixes issue in tag matching , thanks @calvin-summer
@@ -21,15 +21,14 @@ description: |
   1.4.3: more confident confidence thanks @GreshamDanielStephens
   1.4.2: Doc improvements, thanks @olleolleolle
   1.4.1: fixes bug in block-workflow as job. thanks @mu-bro
-  1.4.0: Adds confidence checks to avoid race condition 
+  1.4.0: Adds confidence checks to avoid race condition
   1.3.0: use small resource class in job
 
 
 
-  
+
 display:
-  home_url: https://eddiewebb.github.io/circleci-queue/
-  source_url: https://github.com/eddiewebb/circleci-queue
+  source_url: https://github.com/promiseofcake/circleci-queue
 
 examples:
   queue_workflow:
@@ -37,7 +36,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: promiseofcake/queue@volatile
 
       workflows:
         build_deploy:
@@ -48,16 +47,16 @@ examples:
             - some_other_job:
                 requires:
                   - queue/block_workflow
-           
+
   single_concurrency_job:
     description: |
-      Used to ensure that a only single job (deploy) is not run concurrently. 
-      By default will only queue if the same job from previous worfklows is running on the same branch. 
+      Used to ensure that a only single job (deploy) is not run concurrently.
+      By default will only queue if the same job from previous worfklows is running on the same branch.
       This allows safe jobs like build/test to overlap, minimizing overall queue times.
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: promiseofcake/queue@volatile
 
       workflows:
         build_deploy:
@@ -81,13 +80,13 @@ examples:
                 time: "10"                # max wait, in minutes (default 10)
                 only-on-branch: master  # restrict queueing to a specific branch (default *)
             - run: echo "This job will not overlap"
-  
+
   multiple_job_names_regexp:
     description: Use regexp-jobname when you have multiple jobs to block order of.
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: promiseofcake/queue@volatile
 
       workflows:
         build_deploy:
@@ -111,9 +110,9 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
-                time: "10"               
-                only-on-branch: master  
-                job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 
+                time: "10"
+                only-on-branch: master
+                job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern
             - run: echo "This job will not overlap with itself or next similar nameds job"
 
         DeployStep2:
@@ -121,4 +120,3 @@ examples:
             - image: circleci/node:10
           steps:
             - run: echo "This job will block step1 on any further workflows"
-
