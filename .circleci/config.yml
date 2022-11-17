@@ -1,4 +1,4 @@
-  
+
 version: 2.1
 
 parameters:
@@ -13,15 +13,15 @@ workflows:
       - validate:
           filters:
             branches:
-              ignore: 
+              ignore:
                 - master
       - test:
           context: [orbs]
-          requires: 
+          requires:
             - validate
           filters:
             branches:
-              only: 
+              only:
                 - staging
                 - trying
       - publish:
@@ -53,7 +53,7 @@ jobs:
       - run:
           name: Publish Dev
           command: |
-            PUBLISH_MESSAGE=`circleci orb publish packed.yml eddiewebb/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>> --token ${CIRCLECI_API_KEY}`
+            PUBLISH_MESSAGE=`circleci orb publish packed.yml promiseofcake/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>> --token ${CIRCLECI_API_KEY}`
             ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb `\(.*\)` was published.*/\1/p')
             echo "export ORB_VERSION=\"${ORB_VERSION}\"" >> $BASH_ENV
             echo $ORB_VERSION
@@ -62,8 +62,8 @@ jobs:
       - run:
           name: Import Tests using BATS
           command: |
-            export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>>"
-            bats test            
+            export BATS_IMPORT_DEV_ORB="promiseofcake/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>>"
+            bats test
       - pr-comment
 
   publish:
@@ -72,8 +72,8 @@ jobs:
     working_directory: ~/repo
     steps:
       - checkout
-      - install-circleci   
-      - pr-info  
+      - install-circleci
+      - pr-info
       - run:
           name: Promote to prod
           command: |
@@ -86,7 +86,7 @@ jobs:
               echo "export PR_MESSAGE=\"Orb publish was skipped due to [semver:skip] in commit message.\""  >> $BASH_ENV
               exit 0
             else
-              PUBLISH_MESSAGE=`circleci orb publish promote eddiewebb/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>> ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`            
+              PUBLISH_MESSAGE=`circleci orb publish promote promiseofcake/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>> ${SEMVER_INCREMENT} --token ${CIRCLECI_API_KEY}`
               echo $PUBLISH_MESSAGE
               ORB_VERSION=$(echo $PUBLISH_MESSAGE | sed -n 's/Orb .* was promoted to `\(.*\)`.*/\1/p')
               echo "export PR_MESSAGE=\"BotComment: *Production* version of orb available for use - \\\`${ORB_VERSION}\\\`\"" >> $BASH_ENV
@@ -100,7 +100,7 @@ commands:
   install-bats:
     description: installs the BATS bash testing tool
     steps:
-      - run:      
+      - run:
           name: Install BATS (bash testing)
           command: |
             cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
@@ -110,16 +110,16 @@ commands:
           command: |
             curl -L https://github.com/mikefarah/yq/releases/download/v4.14.1/yq_linux_amd64 -o yq
             chmod a+x yq
-            mv yq /usr/local/bin/            
+            mv yq /usr/local/bin/
   install-circleci:
     description: installs the new CIrcleCI CLI with orb support
     steps:
-      - run: 
+      - run:
           name: Install CircleCI CLI (the new one)
           command: |
             curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | bash
             circleci version
-            echo "Run circleci help"              
+            echo "Run circleci help"
             circleci help
             echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
   pack-and-validate:
@@ -140,7 +140,7 @@ commands:
               echo "No pr found, do nothing"
               exit 0
             fi
-            curl -X POST -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"${PR_MESSAGE}\"}"
+            curl -X POST -u promiseofcake:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}/comments" -d "{\"body\":\"${PR_MESSAGE}\"}"
   pr-info:
     description: get PR number this change originated from
     steps:

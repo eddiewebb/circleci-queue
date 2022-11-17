@@ -1,14 +1,15 @@
 # CircleCI Concurrency Control Orb
 
-[![CircleCI](https://img.shields.io/circleci/build/gh/eddiewebb/circleci-queue)](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master) 
-[![GitHub license](https://img.shields.io/github/license/eddiewebb/circleci-queue)](https://github.com/eddiewebb/circleci-queue/blob/master/LICENSE)
-[![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/eddiewebb/queue)](https://circleci.com/orbs/registry/orb/eddiewebb/queue)
-[![Bors enabled](https://bors.tech/images/badge_small.svg)](https://app.bors.tech/repositories/21077)
+[![CircleCI](https://img.shields.io/circleci/build/gh/promiseofcake/circleci-queue)](https://circleci.com/gh/promiseofcake/circleci-queue/tree/master)
+[![GitHub license](https://img.shields.io/github/license/promiseofcake/circleci-queue)](https://github.com/promiseofcake/circleci-queue/blob/master/LICENSE)
+[![CircleCI Orb Version](https://img.shields.io/badge/endpoint.svg?url=https://badges.circleci.io/orb/promiseofcake/queue)](https://circleci.com/orbs/registry/orb/promiseofcake/queue)
 
 CircleCI Orb to limit workflow concurrency.
 
+Forked from https://github.com/eddiewebb/circleci-queue to adjust issues with the V1 API Deprecation.
+
 Why? Some jobs (typically deployments) need to run sequentially and not parallel, but also run to completion. So CircleCI's native `auto-cancel` is not quite the right fit.
-See https://github.com/eddiewebb/circleci-challenge as an example using blue/green cloud foundry deployments.
+See https://github.com/promiseofcake/circleci-challenge as an example using blue/green cloud foundry deployments.
 
 
 ## Basic Usage
@@ -35,7 +36,7 @@ Oh No! Since `1 minute` is abnormally long for things to be queued, build #20 ab
 ![no queuing if only active build](assets/build_aborted.png)
 
 # Setup
-See https://circleci.com/orbs/registry/orb/eddiewebb/queue#usage-examples for current examples
+See https://circleci.com/orbs/registry/orb/promiseofcake/queue#usage-examples for current examples
 
 ## Note
 
