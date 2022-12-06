@@ -52,16 +52,20 @@ steps:
         fi
 
         urlencode(){
-          local LC_ALL=C
-          local c i n=${#1}
-          for (( i=0; i<n; i++ )); do
-            c="${1:i:1}"
-            case "$c" in
-              [-_.~A-Za-z0-9]) printf '%s' "$c" ;;
-              *) printf '%%%02X' "'$c" ;;
+          LC_WAS="${LC_ALL:-}"
+          export LC_ALL=C
+          string="$1"
+          while [ -n "$string" ]; do
+            tail="${string#?}"
+            head="${string%$tail}"
+            case "$head" in
+              [-_.~A-Za-z0-9]) printf '%c' "$head" ;;
+              *) printf '%%%02X' "'$head" ;;
             esac
+            string="${tail}"
           done
           echo
+          export LC_ALL="${LC_WAS}"
         }
 
         fetch(){
