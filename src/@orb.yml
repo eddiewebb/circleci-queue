@@ -6,7 +6,8 @@ description: |
   This orb requires the project to have an API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
-
+  1.8.3: Doc update
+  1.8.2: Adds urlencode for branch names. (@andrew-barnett)
   1.8.1: Adds content-type header to API calls (@kevinr-electric) and prints message on error (@AlexMeuer)
   1.8.0: minor fix same as version 1.8.0 (missing docs)
   1.7.1: patch fix same as version 1.8.1 to catch folsk who dont update
