@@ -51,6 +51,23 @@ steps:
           tag_pattern=${tag_pattern:1:-1}
         fi
 
+        urlencode(){
+          LC_WAS="${LC_ALL:-}"
+          export LC_ALL=C
+          string="$1"
+          while [ -n "$string" ]; do
+            tail="${string#?}"
+            head="${string%$tail}"
+            case "$head" in
+              [-_.~A-Za-z0-9]) printf '%c' "$head" ;;
+              *) printf '%%%02X' "'$head" ;;
+            esac
+            string="${tail}"
+          done
+          echo
+          export LC_ALL="${LC_WAS}"
+        }
+
         fetch(){
           echo "DEBUG: Making API Call to ${1}"
           url=$1
@@ -95,7 +112,7 @@ steps:
           else
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
             echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
-            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/${CIRCLE_BRANCH}?filter=running"
+            jobs_api_url_template="https://circleci.com/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/$(urlencode "${CIRCLE_BRANCH}")?filter=running"
           fi
 
           if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
