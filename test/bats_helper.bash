@@ -85,5 +85,14 @@ function assert_jq_match {
 	fi
 }
 
+function assert_jq_contains {
+	MATCH=$2
+	RES=$(jq -r "$1" ${JSON_PROJECT_CONFIG})
+	if [[ "$RES" != *"$MATCH"* ]];then
+		echo "Expected string "'"'"$MATCH"'"'" was not found in "'"'"$RES"'"'
+		return 1
+	fi
+}
+
 
 
