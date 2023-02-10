@@ -42,7 +42,7 @@ parameters:
     description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
   circleci-hostname:
     type: string
-    default: "https://circleci.com"
+    default: "circleci.com"
     description: "For server user to specifiy custom hostname for their server"
 
 steps:
@@ -50,6 +50,7 @@ steps:
       name: Queue Until Front of Line
       command: |
         tag_pattern="<<parameters.tag-pattern>>"
+        CIRCLECI_BASE_URL="https://<<parameters.circleci-hostname>>"
 
         # If a pattern is wrapped with slashes, remove them.
         if [[ "$tag_pattern" == /*/ ]]; then
@@ -98,7 +99,7 @@ steps:
           if [ -z "${<< parameters.circleci-api-key >>}" ]; then
             echo "<< parameters.circleci-api-key >> not set. Private projects will be inaccessible."
           else
-            fetch "<< parameters.circleci-hostname >>/api/v2/me" "/tmp/me.cci"
+            fetch "${CIRCLECI_BASE_URL}/api/v2/me" "/tmp/me.cci"
             me=$(jq -e '.id' /tmp/me.cci)
             echo "Using API key for user: ${me}"
           fi
@@ -109,15 +110,15 @@ steps:
         fetch_filtered_active_builds(){
           if [ "<<parameters.consider-branch>>" != "true" ];then
             echo "Orb parameter 'consider-branch' is false, will block previous builds on any branch." 
-            jobs_api_url_template="<< parameters.circleci-hostname >>/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
+            jobs_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           elif [ -n "${CIRCLE_TAG:x}" ] && [ "$tag_pattern" != "" ]; then
             # I'm not sure why this is here, seems identical to above?
             echo "CIRCLE_TAG and orb parameter tag-pattern is set, fetch active builds"
-            jobs_api_url_template="<< parameters.circleci-hostname >>/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
+            jobs_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}?filter=running"
           else
             : ${CIRCLE_BRANCH:?"Required Env Variable not found!"}
             echo "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
-            jobs_api_url_template="<< parameters.circleci-hostname >>/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/$(urlencode "${CIRCLE_BRANCH}")?filter=running"
+            jobs_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/tree/$(urlencode "${CIRCLE_BRANCH}")?filter=running"
           fi
 
           if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
@@ -144,7 +145,7 @@ steps:
               echo "Using test mock workflow response"
               cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json > ${workflow_file}
             else
-              fetch "<< parameters.circleci-hostname >>/api/v2/workflow/${workflow}" "${workflow_file}"
+              fetch "${CIRCLECI_BASE_URL}/api/v2/workflow/${workflow}" "${workflow_file}"
             fi
             created_at=`jq -r '.created_at' ${workflow_file}`
             echo "Workflow was created at: ${created_at}"
@@ -202,7 +203,7 @@ steps:
 
         cancel_current_build(){
           echo "Cancelleing build ${CIRCLE_BUILD_NUM}"
-          cancel_api_url_template="<< parameters.circleci-hostname >>/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${<< parameters.circleci-api-key >>}"
+          cancel_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${<< parameters.circleci-api-key >>}"
           curl -s -X POST $cancel_api_url_template > /dev/null
         }
 

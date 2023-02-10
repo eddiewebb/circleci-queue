@@ -38,7 +38,7 @@ parameters:
     description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
   circleci-hostname:
     type: string
-    default: "https://circleci.com"
+    default: "circleci.com"
     description: "For server user to specifiy custom hostname for their server"
 
 docker:
