@@ -101,7 +101,7 @@ steps:
           else
             fetch "${CIRCLECI_BASE_URL}/api/v2/me" "/tmp/me.cci"
             me=$(jq -e '.id' /tmp/me.cci)
-            echo "Using API key for user: ${me}"
+            echo "Using API key for user: ${me} on host ${CIRCLECI_BASE_URL}"
           fi
           VCS_TYPE="<<parameters.vcs-type>>"
         }
