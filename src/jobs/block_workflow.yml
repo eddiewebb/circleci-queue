@@ -36,6 +36,10 @@ parameters:
     type: string
     default: ""
     description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
+  circleci-hostname:
+    type: string
+    default: "circleci.com"
+    description: "For server user to specifiy custom hostname for their server"
 
 docker:
   - image: cimg/base:stable
@@ -51,3 +55,4 @@ steps:
       confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
       job-regex: <<parameters.job-regex>>
+      circleci-hostname: <<parameters.circleci-hostname>>

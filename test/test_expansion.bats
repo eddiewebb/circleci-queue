@@ -51,6 +51,22 @@ function setup {
 }
 
 
+@test "Command: Server hostname is respected by command" {
+  # given
+  process_config_with test/inputs/command-server.yml
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+  assert_jq_contains '.jobs["build"].steps[0].run.command' "CIRCLECI_BASE_URL=\"https://example.com\"" #only 1 steps
+
+  run jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG
+
+  assert_contains_text "max_time=1"
+
+}
+
+
 @test "Command: script will NOT WAIT with previous job of non matching names when using regexp" {
   # given
   process_config_with test/inputs/command-job-regexp-nomatch.yml
