@@ -172,13 +172,13 @@ steps:
           if [ "<<parameters.block-workflow>>" = "true" ] ;then
             echo "Orb parameter block-workflow is true."
             echo "This job will block until no previous workflows have *any* jobs running."
-            oldest_running_build_num=`jq 'sort_by(.workflows.created_at)| .[0].build_num' /tmp/augmented_jobstatus.json`
-            oldest_commit_time=`jq 'sort_by(.workflows.created_at)| .[0].workflows.created_at' /tmp/augmented_jobstatus.json`
+            oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/augmented_jobstatus.json`
+            oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/augmented_jobstatus.json`
           else
             echo "Orb parameter block-workflow is false."
             echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
-            oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.created_at)|  .[0].build_num" /tmp/augmented_jobstatus.json`
-            oldest_commit_time=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.created_at)|  .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
+            oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.committer_date)|  .[0].build_num" /tmp/augmented_jobstatus.json`
+            oldest_commit_time=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.committer_date)|  .[0].committer_date" /tmp/augmented_jobstatus.json`
           fi
           if [ -z "$oldest_commit_time" ]; then
             echo "API Error - unable to load previous job timings. Report to developer."
@@ -198,7 +198,7 @@ steps:
         }
 
         load_current_workflow_values(){
-           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').workflows.created_at' /tmp/augmented_jobstatus.json`
+           my_commit_time=`jq '.[] | select( .build_num == '"${CIRCLE_BUILD_NUM}"').committer_date' /tmp/augmented_jobstatus.json`
         }
 
         cancel_current_build(){
