@@ -31,7 +31,7 @@ description: |
   
 display:
   home_url: https://eddiewebb.github.io/circleci-queue/
-  source_url: https://github.com/eddiewebb/circleci-queue
+  source_url: https://github.com/gathertown/circleci-queue
 
 examples:
   queue_workflow:
@@ -39,7 +39,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: gathertown/queue@volatile
 
       workflows:
         build_deploy:
@@ -59,7 +59,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: gathertown/queue@volatile
 
       workflows:
         build_deploy:
@@ -89,7 +89,7 @@ examples:
     usage:
       version: 2.1
       orbs:
-        queue: eddiewebb/queue@volatile
+        queue: gathertown/queue@volatile
 
       workflows:
         build_deploy:
