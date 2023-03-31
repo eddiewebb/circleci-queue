@@ -118,7 +118,7 @@ function setup {
 
   assert_contains_text "Max Queue Time: 1 minutes"
   assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelleing build 2"
+  assert_contains_text "Cancelling build 2"
   [[ "$status" == "1" ]]
 }
 
@@ -157,7 +157,7 @@ function setup {
   assert_contains_text "Rerunning check 1/1" 
   assert_contains_text "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (3) to complete."
   assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelleing build 2"
+  assert_contains_text "Cancelling build 2"
   [[ "$status" == "1" ]]
 }
 
@@ -241,7 +241,7 @@ function setup {
 
   assert_contains_text "Max Queue Time: 1 minutes"
   assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelleing build 2"
+  assert_contains_text "Cancelling build 2"
   [[ "$status" == "1" ]]
 }
 
@@ -274,8 +274,6 @@ function setup {
   [[ "$status" == "0" ]]
 }
 
-
-
 @test "Command: script will consider branch" {
   # given
   process_config_with test/inputs/command-non-default.yml
@@ -297,12 +295,41 @@ function setup {
   export CIRCLE_PR_REPONAME=""
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-
   assert_contains_text "Max Queue Time: 1 minutes"
   assert_contains_text "Orb parameter 'consider-branch' is false, will block previous builds on any branch"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
 
+}
+
+@test "Command: script will queue on same workflow when only-on-workflow is set" {
+  # given
+  process_config_with test/inputs/command-only-workflow.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_BRANCH="somespecialbranch"
+  export CIRCLE_JOB="singlejob"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="madethisup"
+  export CIRCLE_PR_REPONAME=""
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+  assert_contains_text "Orb parameter block-workflow is true."
+  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "This job will block until no previous occurrences of workflow build-deploy have *any* jobs running."
+  assert_contains_text "Max wait time exceeded"
+  assert_contains_text "Cancelling build 2"
+  [[ "$status" == "1" ]]
 }
 
 
@@ -337,7 +364,7 @@ function setup {
 @test "Command: script will consider branch default" {
   # given
   process_config_with test/inputs/command-defaults.yml
-  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #branch filtereing handles by API, so return no matching builds
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json #branch filtering handled by API, so return no matching builds
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
@@ -394,7 +421,6 @@ function setup {
   assert_contains_text "Max wait time exceeded"
 
 }
-
 
 @test "Command: script will skip queueing on forks" {
   # given

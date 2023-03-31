@@ -20,6 +20,10 @@ parameters:
     type: string
     default: "*"
     description: "Only queue on specified branch. Default is to enforce serialization on all branches."
+  only-on-workflow:
+    type: string
+    default: "*"
+    description: "Only queue on a specified workflow. Consider combining this with `consider-branch`:`false`."
   vcs-type:
     type: string
     default: "github"
@@ -50,6 +54,7 @@ steps:
       block-workflow: <<parameters.block-workflow>>
       time: <<parameters.time>>
       dont-quit: <<parameters.dont-quit>>
+      only-on-workflow: <<parameters.only-on-workflow>>
       only-on-branch: <<parameters.only-on-branch>>
       vcs-type: <<parameters.vcs-type>>
       confidence: <<parameters.confidence>>

@@ -20,6 +20,10 @@ parameters:
     type: string
     default: "*"
     description: "Only queue on specified branch"
+  only-on-workflow:
+    type: string
+    default: "*"
+    description: "Only queue on a specified workflow. Consider combining this with `consider-branch`:`false`."
   vcs-type:
     type: string
     default: "github"
@@ -171,9 +175,16 @@ steps:
           # falsey parameters are empty strings, so always compare against 'true' 
           if [ "<<parameters.block-workflow>>" = "true" ] ;then
             echo "Orb parameter block-workflow is true."
-            echo "This job will block until no previous workflows have *any* jobs running."
-            oldest_running_build_num=`jq 'sort_by(.committer_date)| .[0].build_num' /tmp/augmented_jobstatus.json`
-            oldest_commit_time=`jq 'sort_by(.committer_date)| .[0].committer_date' /tmp/augmented_jobstatus.json`
+            if [ "<<parameters.only-on-workflow>>" = "*" ]; then
+              echo "This job will block until no previous workflows have *any* jobs running."
+              oldest_running_build_num=`jq 'sort_by(.workflows.created_at)| .[0].build_num' /tmp/augmented_jobstatus.json`
+              oldest_commit_time=`jq 'sort_by(.workflows.created_at)| .[0].workflows.created_at' /tmp/augmented_jobstatus.json`
+            else
+              echo "Orb parameter only-on-workflow is true."
+              echo "This job will block until no previous occurrences of workflow <<parameters.only-on-workflow>> have *any* jobs running."
+              oldest_running_build_num=`jq ". | map(select(.workflows.workflow_name| test(\"<<parameters.only-on-workflow>>\";\"sx\"))) | sort_by(.workflows.created_at)| .[0].build_num" /tmp/augmented_jobstatus.json`
+              oldest_commit_time=`jq ". | map(select(.workflows.workflow_name| test(\"<<parameters.only-on-workflow>>\";\"sx\"))) | sort_by(.workflows.created_at)| .[0].workflows.created_at" /tmp/augmented_jobstatus.json`
+            fi
           else
             echo "Orb parameter block-workflow is false."
             echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
@@ -191,7 +202,7 @@ steps:
             cat /tmp/jobstatus.json || exit 0
             echo "All running jobs with created_at:"
             cat /tmp/augmented_jobstatus.json || exit 0
-            echo "All worfklow details."
+            echo "All workflow details."
             cat /tmp/workflow-*.json
             exit 1
           fi
@@ -202,7 +213,7 @@ steps:
         }
 
         cancel_current_build(){
-          echo "Cancelleing build ${CIRCLE_BUILD_NUM}"
+          echo "Cancelling build ${CIRCLE_BUILD_NUM}"
           cancel_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/${CIRCLE_BUILD_NUM}/cancel?circle-token=${<< parameters.circleci-api-key >>}"
           curl -s -X POST $cancel_api_url_template > /dev/null
         }
@@ -245,7 +256,7 @@ steps:
           echo "Oldest Workflow Timestamp: $oldest_commit_time"
           if [[ ! -z "$my_commit_time" ]] && [[ "$oldest_commit_time" > "$my_commit_time" || "$oldest_commit_time" = "$my_commit_time" ]] ; then
             # API returns Y-M-D HH:MM (with 24 hour clock) so alphabetical string compare is accurate to timestamp compare as well
-            # recent-jobs API does not include pending, so it is posisble we queried in between a workfow transition, and we;re NOT really front of line.
+            # recent-jobs API does not include pending, so it is possible we queried in between a workflow transition, and we;re NOT really front of line.
             if [ $confidence -lt <<parameters.confidence>> ];then
               # To grow confidence, we check again with a delay.
               confidence=$((confidence+1))
