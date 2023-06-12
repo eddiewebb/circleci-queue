@@ -22,8 +22,8 @@ workflows:
                 - bop
           pre-steps:
             - run: |
-                apt update
-                apt install gettext
+                apt update -y
+                apt install -y  gettext
                 circleci pack src > raw.yaml
                 export ORG_NAME=<<matrix.orb_name>>
                 envsubst '$ORG_NAME' < raw.yaml >> final.yaml
