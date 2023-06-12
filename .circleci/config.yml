@@ -24,7 +24,7 @@ workflows:
             - run: |
                 apt update -y
                 apt install -y  gettext
-                circleci pack src > raw.yaml
+                circleci orb pack src > raw.yaml
                 export ORG_NAME=<<matrix.orb_name>>
                 envsubst '$ORG_NAME' < raw.yaml >> final.yaml
           post-steps:
