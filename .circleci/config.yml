@@ -6,39 +6,44 @@ parameters:
     type: string
     default: "queue"
     description: Change this to whatever name is correct for your orb.
+  orb_name:
+    type: string
+    default: "queue"
+    description: Change this to whatever name is correct for your orb.
 
 workflows:
   build-deploy:
     jobs:
       - validate:
-          filters:
-            branches:
-              ignore: 
-                - master
-      - test:
-          context: [orbs]
-          requires: 
-            - validate
-          filters:
-            branches:
-              only: 
-                - staging
-                - trying
-      - publish:
-          context: [orbs]
-          requires:
-            - test
-          filters:
-            branches:
-              only: staging
+          matrix:
+            parameters:
+              orb_name:
+                - baz
+                - bop
+          pre-steps:
+            - run: |
+                apt install gettext
+                circleci pack src > raw.yaml
+                export ORG_NAME=<<matrix.orb_name>>
+                envsubst '$ORG_NAME' < raw.yaml >> final.yaml
+          post-steps:
+            - run: |
+                cat final.yaml | grep resource_class
+    
 
 jobs:
   validate:
+    environment:
+
+    parameters:
+      orb_name:
+        type: string
     docker:
       - image: cimg/base:2019.08
     working_directory: ~/repo
     steps:
       - checkout
+      - run: echo 'building for <<parameters.orb_name>>'
       - install-circleci
       - pack-and-validate
   test:

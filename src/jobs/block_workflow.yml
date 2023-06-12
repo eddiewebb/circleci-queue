@@ -47,7 +47,7 @@ parameters:
 
 docker:
   - image: cimg/base:stable
-resource_class: small
+resource_class: <<parameters.orb_name>>
 steps:
   - until_front_of_line:
       consider-branch: <<parameters.consider-branch>>
