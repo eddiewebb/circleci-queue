@@ -3,7 +3,7 @@
 {
   "testing-note":"This represents the current build, with a job that should be serial",
   "build_num" : 2,
-  "committer_date": "2019-01-17T11:17:24-05:00",
+  "usage_queued_at": "2019-01-17T11:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
   },
@@ -22,7 +22,7 @@
 {
   "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
   "build_num" : 3,
-  "committer_date": "2019-01-17T10:17:24-05:00",
+  "usage_queued_at": "2019-01-17T10:17:24-05:00",
   "branch" : "master",
   "build_parameters":{
   },
@@ -42,7 +42,7 @@
 {
   "testing-note":"This represents a previous deploy job with max concurreny of 1, Delete this block while local testing is queued to mimic previous build completing",
   "build_num" : 4,
-  "committer_date": "2019-01-17T10:17:25-05:00",
+  "usage_queued_at": "2019-01-17T10:17:25-05:00",
   "branch" : "master",
   "build_parameters":{
   },
