@@ -6,7 +6,7 @@ jobs:
     steps:
       - queue/until_front_of_line:
           # non-defaults for each paramter
-          time: "1"
+          time: "1/10"
           consider-branch: false
           dont-quit: true
           block-workflow: true

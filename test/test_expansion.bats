@@ -15,19 +15,19 @@ function setup {
   INLINE_ORB_NAME="queue"
 
 
-  if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
-    echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
-  else
-    echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3
-  fi
-}
+  #if [ -z "$BATS_IMPORT_DEV_ORB" ]; then
+    #echo "#Using \`inline\` orb assembly, to test against published orb, set BATS_IMPORT_DEV_ORB to fully qualified path" >&3
+  #else
+    #echo "#BATS_IMPORT_DEV_ORB env var is set, all config will be tested against imported orb $BATS_IMPORT_DEV_ORB" >&3
+  #fi
 
+
+
+}
 
 @test "Job: full job expands properly" {
   # given
   process_config_with test/inputs/fulljob.yml
-  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
-  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
@@ -36,34 +36,48 @@ function setup {
 }
 
 
-@test "Command: Input parameters are respected by command" {
+@test "Command: Input parameters are passed to environment" {
   # given
   process_config_with test/inputs/command-non-default.yml
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
   assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
-
-  run jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG
-
-  assert_contains_text "max_time=1"
+  assert_jq_match '.jobs["build"].steps[0].run.environment["ONLY_ON_BRANCH"]' '*' 
+  assert_jq_match '.jobs["build"].steps[0].run.environment["max_time"]' '1/10' 
+  assert_jq_match '.jobs["build"].steps[0].run.environment["FILTER_BRANCH"]' 'false' 
 
 }
 
 
-@test "Command: Server hostname is respected by command" {
+@test "Command: script will WAIT with previous job of similar name used in regexp" {
   # given
-  process_config_with test/inputs/command-server.yml
+  process_config_with test/inputs/command-job-regexp.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
   assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
-  assert_jq_contains '.jobs["build"].steps[0].run.command' "CIRCLECI_BASE_URL=\"https://example.com\"" #only 1 steps
 
-  run jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG
+  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  assert_contains_text "max_time=1"
+  load_config_parameters
 
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="DeployStep1"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="master"
+  export CIRCLE_PR_REPONAME=""
+  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
+
+
+  assert_contains_text "Max Queue Time: 6 seconds"
+  assert_contains_text "Max wait time exceeded"
+  assert_contains_text "Cancelling build 2"
+  [[ "$status" == "1" ]]
 }
 
 
@@ -78,7 +92,8 @@ function setup {
   assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
 
   jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
-
+          
+  
   export CIRCLE_BUILD_NUM="2"
   export CIRCLE_JOB="DeployJob1"
   export CIRCLE_PROJECT_USERNAME="madethisup"
@@ -86,41 +101,16 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="master"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
 }
 
-@test "Command: script will WAIT with previous job of similar name used in regexp" {
-  # given
-  process_config_with test/inputs/command-job-regexp.yml
-  export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
-  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
-
-  # when
-  assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
-
-  jq -r '.jobs["build"].steps[0].run.command' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
-
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="DeployJob1"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
-  export CIRCLE_BRANCH="master"
-  export CIRCLE_PR_REPONAME=""
-  run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
-
-
-  assert_contains_text "Max Queue Time: 1 minutes"
-  assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelling build 2"
-  [[ "$status" == "1" ]]
-}
 
 
 # See https://github.com/eddiewebb/circleci-queue/issues/26 for explanation of race condition
@@ -148,14 +138,15 @@ function setup {
   # set initial response to mimic in-btween race condition, no running jobs
   cp test/api/jobs/nopreviousjobs.json /tmp/dynamic_response.json
   # in 11 seconds (> 10) switch to return the running job BACKGROUND PROCESS
-  (sleep 11 && cp test/api/jobs/onepreviousjobsamename.json /tmp/dynamic_response.json) &
+  (sleep 3 && cp test/api/jobs/onepreviousjobsamename.json /tmp/dynamic_response.json) &
 
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Rerunning check 1/1" 
-  assert_contains_text "This build (${CIRCLE_BUILD_NUM}) is queued, waiting for build number (3) to complete."
+  assert_contains_text "This build (${CIRCLE_BUILD_NUM}), pipeline (2) is queued, waiting for build(3) pipeline (1) to complete."
   assert_contains_text "Max wait time exceeded"
   assert_contains_text "Cancelling build 2"
   [[ "$status" == "1" ]]
@@ -184,7 +175,7 @@ function setup {
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
 
@@ -209,10 +200,12 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
 }
@@ -236,10 +229,12 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
   assert_contains_text "Cancelling build 2"
   [[ "$status" == "1" ]]
@@ -265,10 +260,12 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
   assert_contains_text "Orb parameter dont-quit is set to true, letting this job proceed!"
   [[ "$status" == "0" ]]
@@ -293,9 +290,11 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Orb parameter 'consider-branch' is false, will block previous builds on any branch"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
@@ -322,10 +321,12 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
   assert_contains_text "Orb parameter block-workflow is true."
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "This job will block until no previous occurrences of workflow build-deploy have *any* jobs running."
   assert_contains_text "Max wait time exceeded"
   assert_contains_text "Cancelling build 2"
@@ -352,11 +353,13 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
   assert_contains_text "Queueing only happens on master branch, skipping queue"
-  assert_text_not_found "Max Queue Time: 1 minutes"
+  assert_text_not_found "Max Queue Time: 6 seconds"
   [[ "$status" == "0" ]]
 
 }
@@ -381,11 +384,13 @@ function setup {
   export CIRCLE_PROJECT_REPONAME="madethisup"
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
   assert_contains_text "${CIRCLE_BRANCH} queueable"
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Only blocking execution if running previous jobs on branch: ${CIRCLE_BRANCH}"
   assert_contains_text "Front of the line, WooHoo!, Build continuing"
   [[ "$status" == "0" ]]
@@ -414,10 +419,12 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME=""
+
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
 
 
-  assert_contains_text "Max Queue Time: 1 minutes"
+  assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
 
 }
@@ -441,6 +448,7 @@ function setup {
   export CIRCLE_BRANCH="madethisup"
   export CIRCLE_PR_REPONAME="fork"
 
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
   assert_contains_text "Queueing on forks is not supported. Skipping queue..."
 
@@ -467,6 +475,7 @@ function setup {
   export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="madethisup"
 
+  load_config_parameters
   run bash ${BATS_TMPDIR}/script-${BATS_TEST_NUMBER}.bash
   assert_contains_text "Orb parameter block-workflow is true."
 }
