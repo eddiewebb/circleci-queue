@@ -13,7 +13,7 @@ See https://github.com/eddiewebb/circleci-challenge as an example using blue/gre
 
 ## Basic Usage
 
-This adds concurrency limits by ensuring any jobs with this step will only continue once no previous builds are running. It supports a single argument of how many minutes to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY` - which can be created in [account settings](https://circleci.com/account/api).
+This adds concurrency limits by ensuring any jobs with this step will only continue once no previous builds are running. It supports a single argument of how many minutes to wait before aborting itself and it requires a single Environment Variable `CIRCLECI_API_KEY`, which must be a **Personal API Token** (rather than a project-specific API Permissions token). This can be created at [Personal API Tokens](https://app.circleci.com/settings/user/tokens) under Users Settings. Note that the account must have write access (at least the **Contributor** role) on the Project you wish to enable this orb for. However, if the `dont-quit` parameter is enabled, view-only access (the **Viewer** role) is sufficient.
 
 ## Screenshots / Examples
 
