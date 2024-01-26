@@ -1,5 +1,5 @@
 parameters:
-  consider-branch:
+  this-branch-only:
     type: boolean
     default: true
     description: "Should we only consider jobs running on the same branch?"
@@ -7,8 +7,8 @@ parameters:
     type: boolean
     # this is false at COMMAND level as intention is to only block CURRENT job.
     default: false
-    description: "If true, this job will block until no other workflows with an earlier timestamp are running. Typically used as first job."
-  time:
+    description: "If true, this job will block until no other workflows with ANY JOBS with an earlier timestamp are running. Typically used as first job."
+  max-wait-time:
     type: string
     default: "10"
     description: "How many minutes to wait before giving up."
@@ -16,18 +16,19 @@ parameters:
     type: boolean
     default: false
     description: "Quitting is for losers. Force job through once time expires instead of failing."
-  only-on-branch:
+  force-cancel-previous:
+    type: boolean
+    default: false
+    description: "No Mercy. Issue cancel commands for any previous competitors (only applies when dont-quit also true)"
+  limit-branch-name:
     type: string
     default: "*"
-    description: "Only queue on specified branch"
-  only-on-workflow:
+    description: "Only apply queue logic on specified branch. "
+  limit-workflow-name:
     type: string
     default: "*"
     description: "Only queue on a specified workflow. Consider combining this with `consider-branch`:`false`."
-  vcs-type:
-    type: string
-    default: "github"
-    description: "Override VCS to 'bitbucket' if needed."
+  # vcs-type --> pipeline.project.type
   confidence:
     type: string
     default: "1"
@@ -43,7 +44,7 @@ parameters:
   job-regex:
     type: string
     default: ""
-    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
+    description: "Used to selectively block individual jobs in a workflow. ex '^deploy*'"
   circleci-hostname:
     type: string
     default: "circleci.com"
@@ -54,15 +55,19 @@ steps:
       name: Queue Until Front of Line
       command: <<include(../scripts/loop.bash)>>
       environment:  
+        MY_PIPELINE_NUMBER: <<pipeline.number>>
+        TRIGGER_SOURCE: <<pipeline.trigger_source>>
+        MY_BRANCH: <<pipeline.git.branch>>
         tag_pattern: <<parameters.tag-pattern>>
         CIRCLECI_BASE_URL: https://<<parameters.circleci-hostname>>
-        max_time: <<parameters.time>>
+        max_time: <<parameters.max-wait-time>>
         CONFIDENCE_THRESHOLD: <<parameters.confidence>>
         DONT_QUIT: <<parameters.dont-quit>>
-        ONLY_ON_BRANCH: <<parameters.only-on-branch>>
+        FORCE_CANCEL_PREVIOUS: <<parameters.force-cancel-previous>>
+        ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
         CCI_API_KEY_NAME: << parameters.circleci-api-key >>
-        FILTER_BRANCH: << parameters.consider-branch >>
-        VCS_TYPE: <<parameters.vcs-type>>
+        FILTER_BRANCH: << parameters.this-branch-only >>
+        VCS_TYPE: <<pipeline.project.type>>
         JOB_REGEXP: <<parameters.job-regex>>
         BLOCK_WORKFLOW: <<parameters.block-workflow>>
-        ONLY_ON_WORKFLOW: <<parameters.only-on-workflow>>
+        ONLY_ON_WORKFLOW: <<parameters.limit-workflow-name>>
