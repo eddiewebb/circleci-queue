@@ -9,4 +9,4 @@ jobs:
           consider-branch: false
           block-workflow: true
           only-on-workflow: "build-deploy"
-          time: "1"
+          time: "1/10"

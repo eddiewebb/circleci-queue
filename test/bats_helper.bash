@@ -26,7 +26,7 @@ function assemble_inline {
 	echo "version: 2.1" 
 	echo "orbs:"
 	echo "  ${INLINE_ORB_NAME}:"
-	circleci config pack src | sed -e 's/^/    /'
+	circleci orb pack src | sed -e 's/^/    /'
 	if [ -s $CONFIG ];then
 		cat $CONFIG
 	fi
@@ -94,5 +94,8 @@ function assert_jq_contains {
 	fi
 }
 
-
+function load_config_parameters {
+	jq -r '.jobs["build"].steps[0].run.environment | to_entries[] | "export "+(.key | ascii_upcase)+"="+(.value | @sh)' $JSON_PROJECT_CONFIG > ${BATS_TMPDIR}/env.sh
+  	source ${BATS_TMPDIR}/env.sh
+}
 

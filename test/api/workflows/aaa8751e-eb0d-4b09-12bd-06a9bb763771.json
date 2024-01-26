@@ -2,7 +2,7 @@
   "stopped_at" : null,
   "name" : "build-deploy",
   "project_slug" : "test/project",
-  "pipeline_number" : 1,
+  "pipeline_number" : 2,
   "status" : "running",
   "id" : "aaa8751e-eb0d-4b09-12bd-06a9bb763771",
   "created_at" : "2019-01-17T10:17:23-05:00",

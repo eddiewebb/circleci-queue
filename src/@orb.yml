@@ -3,9 +3,11 @@ description: |
   Allows jobs or entire workflows to be queued to ensure they run in serial.  
   This is ideal for deployments or other activities that must not run concurrently.
   May optionaly consider branch-level isolation if unique branches should run concurrently. 
-  This orb requires the project to have an API key in order to query build states.
+  This orb requires the project to have an **Personal** API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
+  3.0.0: Use pipeline.number as authoritative comparison. Breaks many parameters.
+  2.2.2: Docs clarity on token needs (@davidjb)
   2.2.1: fixes release version bug
   2.2.0: Adds 'filter-by-workflow' (@soniqua)
   2.0.0: Breaking change fixes dyanamic config, but may break Bitbucket users. 
@@ -48,8 +50,8 @@ examples:
         build_deploy:
           jobs:
             - queue/block_workflow:
-                time: "10"                # max wait, in minutes (default 10)
-                only-on-branch: master  # restrict queueing to a specific branch (default *)
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - some_other_job:
                 requires:
                   - queue/block_workflow
@@ -83,8 +85,8 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
-                time: "10"                # max wait, in minutes (default 10)
-                only-on-branch: master  # restrict queueing to a specific branch (default *)
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - run: echo "This job will not overlap"
   
   multiple_job_names_regexp:
@@ -116,8 +118,8 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
-                time: "10"               
-                only-on-branch: master  
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
                 job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 
             - run: echo "This job will not overlap with itself or next similar nameds job"
 
