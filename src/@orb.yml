@@ -48,8 +48,8 @@ examples:
         build_deploy:
           jobs:
             - queue/block_workflow:
-                time: "10"                # max wait, in minutes (default 10)
-                only-on-branch: master  # restrict queueing to a specific branch (default *)
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - some_other_job:
                 requires:
                   - queue/block_workflow
@@ -83,8 +83,8 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
-                time: "10"                # max wait, in minutes (default 10)
-                only-on-branch: master  # restrict queueing to a specific branch (default *)
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - run: echo "This job will not overlap"
   
   multiple_job_names_regexp:
@@ -116,8 +116,8 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
-                time: "10"               
-                only-on-branch: master  
+                max-wait-time: "10"                # max wait, in minutes (default 10)
+                limit-branch-name: main  # restrict queueing to a specific branch (default *)
                 job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 
             - run: echo "This job will not overlap with itself or next similar nameds job"
 
