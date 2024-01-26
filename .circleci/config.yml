@@ -89,7 +89,9 @@ jobs:
       - pr-info  
       - when:
           condition:
-            equal: [ main, << pipeline.git.branch >> ]
+            or:
+              - equal: [ trying, << pipeline.git.branch >> ]
+              - equal: [ staging, << pipeline.git.branch >> ]
           steps:
             - run:
                 name: Promote to prod
