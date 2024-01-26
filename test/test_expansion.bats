@@ -25,6 +25,35 @@ function setup {
 
 }
 
+@test "Default job sets block workflow properly" {
+  # given
+  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+  process_config_with test/inputs/fulljob.yml
+
+  # when
+  assert_jq_match '.jobs | length' 1 #only 1 job
+  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
+
+  
+  load_config_parameters "Single File"
+  export MY_PIPELINE_NUMBER="2"
+  export TRIGGER_SOURCE="1" 
+  export VCS_TYPE="github" 
+  export MY_BRANCH="main"
+  export CIRCLE_BUILD_NUM="2"
+  export CIRCLE_JOB="singlejob"
+  export CIRCLE_PROJECT_USERNAME="madethisup"
+  export CIRCLE_PROJECT_REPONAME="madethisup"
+  export CIRCLE_REPOSITORY_URL="madethisup"
+  export CIRCLE_BRANCH="main"
+  export CIRCLE_PR_REPONAME=""
+  run bash scripts/loop.bash
+  echo $ouput
+
+
+  assert_contains_text "Orb parameter block-workflow is true."
+}
 
 @test "Command: Input parameters are passed to environment" {
   # given
@@ -332,33 +361,3 @@ function setup {
 
 }
 
-
-@test "Default job sets block workflow properly" {
-  # given
-  export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
-  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
-  process_config_with test/inputs/fulljob.yml
-
-  # when
-  assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
-
-  
-  load_config_parameters "Single File"
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
-  export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
-  run bash scripts/loop.bash
-  echo $ouput
-
-
-  assert_contains_text "Orb parameter block-workflow is true."
-}

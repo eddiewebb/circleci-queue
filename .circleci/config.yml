@@ -63,7 +63,7 @@ jobs:
           name: Import Tests using BATS
           command: |
             export BATS_IMPORT_DEV_ORB="eddiewebb/<<pipeline.parameters.orbname>>@dev:<<pipeline.number>>"
-            bats --jobs 4 test            
+            bats --jobs 8 test            
       - pr-comment
       - run:
           name: Check Semver

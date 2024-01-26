@@ -96,7 +96,7 @@ function assert_jq_contains {
 
 function load_config_parameters {
 	NAME="${1:-build}"
-	jq -r '.jobs["'${NAME}'"].steps[0].run.environment | to_entries[] | "export "+(.key | ascii_upcase)+"="+(.value | @sh)' $JSON_PROJECT_CONFIG > $ENV_STAGING_PATH
+	jq -r '.jobs["'"${NAME}"'"].steps[0].run.environment | to_entries[] | "export "+(.key | ascii_upcase)+"="+(.value | @sh)' $JSON_PROJECT_CONFIG > $ENV_STAGING_PATH
 	source $ENV_STAGING_PATH
 }
 
