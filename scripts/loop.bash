@@ -3,11 +3,16 @@
 #
 # THis script uses many environment variables, some set from pipeline parameters. See orb yaml for source.
 #
+TMP_DIR=`mktemp -d`
+echo "Using Temp Dir: $TMP_DIR"
+SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
+AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
 
 load_variables(){
+    : ${max_time:?"Required Env Variable not found!"}
     wait_time=0
     loop_time=11
-    max_time_seconds=$((60*${max_time}))
+    max_time_seconds=$(( 60 * ${MAX_TIME} ))
     # just confirm our required variables are present
     : ${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}
     : ${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}
@@ -26,8 +31,8 @@ load_variables(){
     if [ -z "${CCI_TOKEN}" ]; then
         echo "CCI_TOKEN not set. Private projects and force cancel will not function."
     else
-        fetch "${CIRCLECI_BASE_URL}/api/v2/me" "/tmp/me.cci"
-        me=$(jq -e '.id' /tmp/me.cci)
+        fetch "${CIRCLECI_BASE_URL}/api/v2/me" "$TMP_DIR/me.cci"
+        me=$(jq -e '.id' $TMP_DIR/me.cci)
         echo "Using API key for user: ${me} on host ${CIRCLECI_BASE_URL}"
     fi
 }
@@ -67,27 +72,27 @@ update_active_run_data(){
         echo "Orb parameter block-workflow is true. Any previous (matching) pipelines with running workflows will block this entire workflow."
         if [ "${ONLY_ON_WORKFLOW}" = "*" ]; then
             echo "No workflow name filter. This job will block until no previous workflows with *any* name are running, regardless of job name."
-            oldest_running_build_num=`jq 'sort_by(.workflows.pipeline_number)| .[-1].build_num' /tmp/augmented_jobstatus.json`
-            front_of_queue_pipeline_number=`jq 'sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty' /tmp/augmented_jobstatus.json`
+            oldest_running_build_num=`jq 'sort_by(.workflows.pipeline_number)| .[-1].build_num' $AUGMENTED_JOBSTATUS_PATH`
+            front_of_queue_pipeline_number=`jq -r 'sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty' $AUGMENTED_JOBSTATUS_PATH`
         else
             echo "Orb parameter limit-workflow-name is provided."
             echo "This job will block until no previous occurrences of workflow ${ONLY_ON_WORKFLOW} are running, regardless of job name"
-            oldest_running_build_num=`jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].build_num" /tmp/augmented_jobstatus.json`
-            front_of_queue_pipeline_number=`jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty" /tmp/augmented_jobstatus.json`
+            oldest_running_build_num=`jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].build_num" $AUGMENTED_JOBSTATUS_PATH`
+            front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
         fi
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
-        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].build_num" /tmp/augmented_jobstatus.json`
-        front_of_queue_pipeline_number=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].workflows.pipeline_number // empty" /tmp/augmented_jobstatus.json`
+        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].build_num" $AUGMENTED_JOBSTATUS_PATH`
+        front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
     fi
     if [ -z $front_of_queue_pipeline_number ];then
         echo "API Call for existing jobs returned no matches. This means job is alone."
         if [[ $DEBUG == "true" ]];then
             echo "All running jobs:"
-            cat /tmp/jobstatus.json || exit 0
+            cat $SHALLOW_JOBSTATUS_PATH || exit 0
             echo "All running jobs with created_at:"
-            cat /tmp/augmented_jobstatus.json || exit 0
+            cat $AUGMENTED_JOBSTATUS_PATH || exit 0
             echo "All workflow details."
             cat /tmp/workflow-*.json
             exit 1
@@ -109,26 +114,26 @@ fetch_filtered_active_builds(){
 
     if [ ! -z $TESTING_MOCK_RESPONSE ] && [ -f $TESTING_MOCK_RESPONSE ];then
         echo "Using test mock response"
-        cat $TESTING_MOCK_RESPONSE > /tmp/jobstatus.json
+        cat $TESTING_MOCK_RESPONSE > $SHALLOW_JOBSTATUS_PATH
     else
-        fetch "$jobs_api_url_template" "/tmp/jobstatus.json"
+        fetch "$jobs_api_url_template" "$SHALLOW_JOBSTATUS_PATH"
         echo "API access successful"
     fi
 
     if [ -n "${CIRCLE_TAG}" ] && [ "$TAG_PATTERN" != "" ]; then
         echo "TAG_PATTERN variable non-empty, will only block pipelines with maching tag"
-        jq "[ .[] | select((.build_num | . == \"${CIRCLE_BUILD_NUM}\") or (.vcs_tag | (. != null and test(\"${TAG_PATTERN}\"))) ) ]" /tmp/jobstatus.json >/tmp/jobstatus_tag.json
-        mv /tmp/jobstatus_tag.json /tmp/jobstatus.json
+        jq "[ .[] | select((.build_num | . == \"${CIRCLE_BUILD_NUM}\") or (.vcs_tag | (. != null and test(\"${TAG_PATTERN}\"))) ) ]" $SHALLOW_JOBSTATUS_PATH >/tmp/jobstatus_tag.json
+        mv /tmp/jobstatus_tag.json $SHALLOW_JOBSTATUS_PATH
     fi
 }
 
 augment_jobs_with_pipeline_data(){
     echo "Getting queue ordering"
-    cp /tmp/jobstatus.json /tmp/augmented_jobstatus.json
-    for workflow in `jq -r ".[] | .workflows.workflow_id //empty" /tmp/augmented_jobstatus.json | uniq`; do
+    cp $SHALLOW_JOBSTATUS_PATH $AUGMENTED_JOBSTATUS_PATH
+    for workflow in `jq -r ".[] | .workflows.workflow_id //empty" $AUGMENTED_JOBSTATUS_PATH | uniq`; do
         #get workflow to get pipeline...
-        workflow_file=/tmp/workflow-${workflow}.json
-        if [ ! -z $TESTING_MOCK_WORKFLOW_RESPONSES ] && [ -f $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json ]; then
+        workflow_file=${TMP_DIR}/workflow-${workflow}.json
+        if [ -f "$TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json" ]; then
             echo "Using test mock workflow response"
             cat $TESTING_MOCK_WORKFLOW_RESPONSES/${workflow}.json > ${workflow_file}
         else
@@ -137,10 +142,10 @@ augment_jobs_with_pipeline_data(){
         pipeline_id=`jq -r '.pipeline_id' ${workflow_file}`
         pipeline_number=`jq -r '.pipeline_number' ${workflow_file}`
         echo "Workflow: ${workflow} is from pipeline #${pipeline_number}"
-        cat /tmp/augmented_jobstatus.json | jq --arg pipeline_number "${pipeline_number}" --arg workflow "${workflow}" '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {pipeline_number:$pipeline_number}' > /tmp/augmented_jobstatus-${workflow}.json
+        cat $AUGMENTED_JOBSTATUS_PATH | jq --arg pipeline_number "${pipeline_number}" --arg workflow "${workflow}" '(.[] | select(.workflows.workflow_id == $workflow) | .workflows) |= . + {pipeline_number:$pipeline_number}' > ${TMP_DIR}/augmented_jobstatus-${workflow}.json
         #DEBUG echo "new augmented_jobstatus:"
-        #DEBUG cat /tmp/augmented_jobstatus-${workflow}.json
-        mv /tmp/augmented_jobstatus-${workflow}.json /tmp/augmented_jobstatus.json
+        #DEBUG cat ${TMP_DIR}/augmented_jobstatus-${workflow}.json
+        mv ${TMP_DIR}/augmented_jobstatus-${workflow}.json $AUGMENTED_JOBSTATUS_PATH
     done
 }
 
@@ -202,9 +207,9 @@ while true; do
     update_active_run_data
 
     echo "This Job's Pipeline #: $MY_PIPELINE_NUMBER"
-    echo "Oldest running Job's Pipeline #: $front_of_queue_pipeline_number"
+    echo "Front of Queue (fifo) Pipeline #: $front_of_queue_pipeline_number"
 
-    if [[ -z "$front_of_queue_pipeline_number" ]] || [[ ! -z "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" < "$MY_PIPELINE_NUMBER" || "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]] ; then
+    if [[ -z "$front_of_queue_pipeline_number" ]] || [[ ! -z "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]] ; then
         # recent-jobs API does not include pending, so it is possible we queried in between a workflow transition, and we;re NOT really front of line.
         if [ $confidence -lt $CONFIDENCE_THRESHOLD ];then
             # To grow confidence, we check again with a delay.

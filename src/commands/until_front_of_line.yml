@@ -71,19 +71,19 @@ steps:
       name: Queue Until Front of Line
       command: <<include(../scripts/loop.bash)>>
       environment:  
-        MY_PIPELINE_NUMBER: <<parameters.my-pipeline>>
-        TRIGGER_SOURCE: <<parameters.trigger-source>>
-        MY_BRANCH: <<parameters.my-branch>>
-        tag_pattern: <<parameters.tag-pattern>>
-        CIRCLECI_BASE_URL: https://<<parameters.circleci-hostname>>
-        max_time: <<parameters.max-wait-time>>
-        CONFIDENCE_THRESHOLD: <<parameters.confidence>>
+        ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
+        BLOCK_WORKFLOW: <<parameters.block-workflow>>
+        MAX_TIME: '<<parameters.max-wait-time>>'
         DONT_QUIT: <<parameters.dont-quit>>
         FORCE_CANCEL_PREVIOUS: <<parameters.force-cancel-previous>>
-        ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
-        CCI_API_KEY_NAME: << parameters.circleci-api-key >>
         FILTER_BRANCH: << parameters.this-branch-only >>
-        VCS_TYPE: <<parameters.vcs-type>>
-        JOB_REGEXP: <<parameters.job-regex>>
-        BLOCK_WORKFLOW: <<parameters.block-workflow>>
         ONLY_ON_WORKFLOW: <<parameters.limit-workflow-name>>
+        CONFIDENCE_THRESHOLD: <<parameters.confidence>>
+        CCI_API_KEY_NAME: << parameters.circleci-api-key >>
+        TAG_PATTERN: <<parameters.tag-pattern>>
+        JOB_REGEXP: <<parameters.job-regex>>
+        CIRCLECI_BASE_URL: https://<<parameters.circleci-hostname>>
+        MY_PIPELINE_NUMBER: <<parameters.my-pipeline>>
+        TRIGGER_SOURCE: <<parameters.trigger-source>>
+        VCS_TYPE: <<parameters.vcs-type>>
+        MY_BRANCH: <<parameters.my-branch>>

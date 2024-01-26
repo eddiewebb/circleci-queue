@@ -65,5 +65,6 @@ steps:
       limit-branch-name: <<parameters.limit-branch-name>>
       confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
+      tag-pattern: <<parameters.tag-pattern>>
       job-regex: <<parameters.job-regex>>
       circleci-hostname: <<parameters.circleci-hostname>>

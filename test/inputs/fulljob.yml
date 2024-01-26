@@ -3,4 +3,4 @@ workflows:
     jobs:
       - queue/block_workflow:
           name: "Single File"
-          time: "1/10"
+          max-wait-time: "1/10"
