@@ -141,7 +141,7 @@ commands:
       - run:
           name: Pack and Validate
           command: |
-            circleci config pack src/ > packed.yml
+            circleci orb pack src/ > packed.yml
             circleci orb validate packed.yml
   pr-comment:
     description: add message to pr this build originated from
