@@ -9,7 +9,7 @@ SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
 AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
 
 load_variables(){
-    : ${max_time:?"Required Env Variable not found!"}
+    : ${MAX_TIME:?"Required Env Variable not found!"}
     wait_time=0
     loop_time=11
     max_time_seconds=$(( 60 * ${MAX_TIME} ))
