@@ -4,3 +4,4 @@ workflows:
       - queue/block_workflow:
           name: "Single File"
           max-wait-time: "1/10"
+          my-pipeline: 2

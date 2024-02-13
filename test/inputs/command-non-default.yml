@@ -18,3 +18,4 @@ jobs:
           tag-pattern: 'unique-tag-pattern'
           job-regex: 'unique-job-regex'
           circleci-hostname: 'unique-hostname'
+          my-pipeline: 2

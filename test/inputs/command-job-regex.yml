@@ -8,3 +8,4 @@ jobs:
           max-wait-time: "1/10"
           limit-branch-name: "main"
           job-regex: "^DeployStep[0-9]$"
+          my-pipeline: 2

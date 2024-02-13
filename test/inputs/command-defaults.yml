@@ -6,3 +6,4 @@ jobs:
     steps:
       - queue/until_front_of_line:
           max-wait-time: "1/10"
+          my-pipeline: 2
