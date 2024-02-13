@@ -9,3 +9,4 @@ jobs:
           limit-branch-name: "main"
           job-regex: "^DeployStep[0-9]$"
           my-pipeline: 2
+          include-debug: true

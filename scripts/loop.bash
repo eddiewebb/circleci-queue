@@ -94,8 +94,11 @@ update_active_run_data(){
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
-        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[0].build_num" $AUGMENTED_JOBSTATUS_PATH`
-        front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[0].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
+        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].build_num" $AUGMENTED_JOBSTATUS_PATH`
+        front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
+        if [[ "$DEBUG" != "false" ]];then
+            echo "DEBUG: me: $MY_PIPELINE_NUMBER, front: $front_of_queue_pipeline_number"
+        fi
     fi
     if [ -z $front_of_queue_pipeline_number ];then
         echo "API Call for existing jobs returned no matches. This means job is alone."
