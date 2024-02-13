@@ -7,9 +7,6 @@
 load_variables(){
 
     TMP_DIR=`mktemp -d`
-    if [[ $DEBUG != "false" ]];then
-     echo "Using Temp Dir: $TMP_DIR"
-    fi
     SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
     AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
     echo "Block: $BLOCK_WORKFLOW"
@@ -31,7 +28,6 @@ load_variables(){
     : ${MY_BRANCH:?"Required MY_BRANCH not found! This is likely a bug in orb, please report."}
     : ${MY_PIPELINE_NUMBER:?"Required MY_PIPELINE_NUMBER not found! This is likely a bug in orb, please report."}
     
-    echo "Pipeline: ${MY_PIPELINE_NUMBER}"
     # If a pattern is wrapped with slashes, remove them.
     if [[ "$TAG_PATTERN" == /*/ ]]; then
         TAG_PATTERN=${TAG_PATTERN:1:-1}
@@ -45,6 +41,11 @@ load_variables(){
         fetch "${CIRCLECI_BASE_URL}/api/v2/me" "$TMP_DIR/me.cci"
         me=$(jq -e '.id' $TMP_DIR/me.cci)
         echo "Using API key for user: ${me} on host ${CIRCLECI_BASE_URL}"
+    fi
+
+    if [[ $DEBUG != "false" ]];then
+     echo "Using Temp Dir: $TMP_DIR"
+     set
     fi
 }
 
@@ -117,7 +118,7 @@ update_active_run_data(){
 fetch_filtered_active_builds(){
     JOB_API_SUFFIX="?filter=running&shallow=true"
     jobs_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}${JOB_API_SUFFIX}"
-    if [ "${FILTER_BRANCH}" != "1" ];then
+    if [ "${FILTER_BRANCH}" == "false" ];then
         echo "Orb parameter 'this-branch-only' is false, will block previous builds on any branch." 
     else
         #branch filter
