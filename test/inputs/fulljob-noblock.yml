@@ -1,0 +1,8 @@
+workflows:
+  single_file:
+    jobs:
+      - queue/block_workflow:
+          name: "Single File"
+          max-wait-time: "1/10"
+          my-pipeline: 2
+          block-workflow: false   #make sure false vlaues work!

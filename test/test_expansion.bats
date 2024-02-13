@@ -265,7 +265,7 @@ function setup {
 
 @test "Command: script with dont-quit will not fail current job" {
   # given
-  process_config_with test/inputs/command-defaults.yml
+  process_config_with test/inputs/command-dont-quit.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
