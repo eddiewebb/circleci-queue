@@ -60,6 +60,7 @@ steps:
   - run:
       name: Queue Until Front of Line
       command: <<include(../scripts/loop.bash)>>
+      shell: bash
       environment:  
         ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
         BLOCK_WORKFLOW: <<parameters.block-workflow>>

@@ -7,12 +7,12 @@
 load_variables(){
 
     TMP_DIR=`mktemp -d`
-    if [[ $DEBUG == "1" ]];then
+    if [[ $DEBUG != "false" ]];then
      echo "Using Temp Dir: $TMP_DIR"
     fi
     SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
     AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
-    
+    echo "Block: $BLOCK_WORKFLOW"
     : ${MAX_TIME:?"Required Env Variable not found!"}
     wait_time=0
     loop_time=11
@@ -79,7 +79,7 @@ update_active_run_data(){
     fi
 
     # falsey parameters are empty strings, so always compare against 'true' 
-    if [ "${BLOCK_WORKFLOW}" = "1" ] ;then
+    if [ "${BLOCK_WORKFLOW}" != "false" ] ;then
         echo "Orb parameter block-workflow is true. Any previous (matching) pipelines with running workflows will block this entire workflow."
         if [ "${ONLY_ON_WORKFLOW}" = "*" ]; then
             echo "No workflow name filter. This job will block until no previous workflows with *any* name are running, regardless of job name."
@@ -99,7 +99,7 @@ update_active_run_data(){
     fi
     if [ -z $front_of_queue_pipeline_number ];then
         echo "API Call for existing jobs returned no matches. This means job is alone."
-        if [[ $DEBUG == "1" ]];then
+        if [[ $DEBUG != "false" ]];then
             echo "All running jobs:"
             cat $SHALLOW_JOBSTATUS_PATH || exit 0
             echo "All running jobs with created_at:"
@@ -177,7 +177,7 @@ urlencode(){
 }
 
 fetch(){
-    if [[ $DEBUG == "1" ]];then
+    if [[ $DEBUG != "false" ]];then
         echo "DEBUG: Making API Call to ${1}"    
     fi
     url=$1
@@ -188,7 +188,7 @@ fetch(){
         cat ${target}
         exit 1
     else
-        if [[ $DEBUG == "1" ]];then
+        if [[ $DEBUG != "false" ]];then
             echo "DEBUG: API Success"
         fi
     fi
@@ -243,9 +243,9 @@ while true; do
 
     if [ $wait_time -ge $max_time_seconds ]; then
         echo "Max wait time exceeded, fail or force cancel..."
-        if [ "${DONT_QUIT}" == "1" ];then
+        if [ "${DONT_QUIT}" != "false" ];then
             echo "Orb parameter dont-quit is set to true, letting this job proceed!"
-            if [ "${FORCE_CANCEL_PREVIOUS}" == "1" ]; then
+            if [ "${FORCE_CANCEL_PREVIOUS}" != "false" ]; then
                 "FEATURE NOT IMPLEMENTED"
                 exit 1
             fi
