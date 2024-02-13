@@ -50,6 +50,7 @@ examples:
         build_deploy:
           jobs:
             - queue/block_workflow:
+                my-pipeline: <<pipeline.number>>  # Required due to orb processing flow
                 max-wait-time: "10"                # max wait, in minutes (default 10)
                 limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - some_other_job:
@@ -85,6 +86,7 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
+                my-pipeline: <<pipeline.number>>  # Required due to orb processing flow
                 max-wait-time: "10"                # max wait, in minutes (default 10)
                 limit-branch-name: main  # restrict queueing to a specific branch (default *)
             - run: echo "This job will not overlap"
@@ -118,6 +120,7 @@ examples:
             - image: circleci/node:10
           steps:
             - queue/until_front_of_line:
+                my-pipeline: <<pipeline.number>>  # Required due to orb processing flow
                 max-wait-time: "10"                # max wait, in minutes (default 10)
                 limit-branch-name: main  # restrict queueing to a specific branch (default *)
                 job-regex: "^DeployStep[0-9]$" #use extendex regexp pattern 

@@ -49,7 +49,11 @@ parameters:
     type: string
     default: "circleci.com"
     description: "For server user to specifiy custom hostname for their server"
-
+  my-pipeline:
+    type: integer
+  include-debug:
+    type: boolean
+    default: false
 
 
 docker:
@@ -68,3 +72,5 @@ steps:
       tag-pattern: <<parameters.tag-pattern>>
       job-regex: <<parameters.job-regex>>
       circleci-hostname: <<parameters.circleci-hostname>>
+      my-pipeline: <<parameters.my-pipeline>>
+      include-debug: <<parameters.include-debug>>

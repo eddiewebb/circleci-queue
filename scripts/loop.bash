@@ -3,12 +3,16 @@
 #
 # THis script uses many environment variables, some set from pipeline parameters. See orb yaml for source.
 #
-TMP_DIR=`mktemp -d`
-echo "Using Temp Dir: $TMP_DIR"
-SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
-AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
 
 load_variables(){
+
+    TMP_DIR=`mktemp -d`
+    if [[ $DEBUG == "1" ]];then
+     echo "Using Temp Dir: $TMP_DIR"
+    fi
+    SHALLOW_JOBSTATUS_PATH=$TMP_DIR/jobstatus.json
+    AUGMENTED_JOBSTATUS_PATH=$TMP_DIR/augmented_jobstatus.json
+    
     : ${MAX_TIME:?"Required Env Variable not found!"}
     wait_time=0
     loop_time=11
@@ -19,8 +23,15 @@ load_variables(){
     : ${CIRCLE_PROJECT_REPONAME:?"Required Env Variable not found!"}
     : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
     : ${CIRCLE_JOB:?"Required Env Variable not found!"}
+    VCS_TYPE="github"
+    if [[ "$CIRCLE_REPOSITORY_URL" =~ "*bitbucket.org*" ]]; then
+        VCS_TYPE="bitbucket"
+    fi
     : ${VCS_TYPE:?"Required VCS TYPE not found! This is likely a bug in orb, please report."}
+    : ${MY_BRANCH:?"Required MY_BRANCH not found! This is likely a bug in orb, please report."}
     : ${MY_PIPELINE_NUMBER:?"Required MY_PIPELINE_NUMBER not found! This is likely a bug in orb, please report."}
+    
+    echo "Pipeline: ${MY_PIPELINE_NUMBER}"
     # If a pattern is wrapped with slashes, remove them.
     if [[ "$TAG_PATTERN" == /*/ ]]; then
         TAG_PATTERN=${TAG_PATTERN:1:-1}
@@ -68,27 +79,27 @@ update_active_run_data(){
     fi
 
     # falsey parameters are empty strings, so always compare against 'true' 
-    if [ "${BLOCK_WORKFLOW}" = "true" ] ;then
+    if [ "${BLOCK_WORKFLOW}" = "1" ] ;then
         echo "Orb parameter block-workflow is true. Any previous (matching) pipelines with running workflows will block this entire workflow."
         if [ "${ONLY_ON_WORKFLOW}" = "*" ]; then
             echo "No workflow name filter. This job will block until no previous workflows with *any* name are running, regardless of job name."
-            oldest_running_build_num=`jq 'sort_by(.workflows.pipeline_number)| .[-1].build_num' $AUGMENTED_JOBSTATUS_PATH`
-            front_of_queue_pipeline_number=`jq -r 'sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty' $AUGMENTED_JOBSTATUS_PATH`
+            oldest_running_build_num=`jq 'sort_by(.workflows.pipeline_number)| .[0].build_num' $AUGMENTED_JOBSTATUS_PATH`
+            front_of_queue_pipeline_number=`jq -r 'sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty' $AUGMENTED_JOBSTATUS_PATH`
         else
             echo "Orb parameter limit-workflow-name is provided."
             echo "This job will block until no previous occurrences of workflow ${ONLY_ON_WORKFLOW} are running, regardless of job name"
-            oldest_running_build_num=`jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].build_num" $AUGMENTED_JOBSTATUS_PATH`
-            front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[-1].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
+            oldest_running_build_num=`jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].build_num" $AUGMENTED_JOBSTATUS_PATH`
+            front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
         fi
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: ${JOB_NAME}"
-        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].build_num" $AUGMENTED_JOBSTATUS_PATH`
-        front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[-1].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
+        oldest_running_build_num=`jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[0].build_num" $AUGMENTED_JOBSTATUS_PATH`
+        front_of_queue_pipeline_number=`jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.pipeline_number)|  .[0].workflows.pipeline_number // empty" $AUGMENTED_JOBSTATUS_PATH`
     fi
     if [ -z $front_of_queue_pipeline_number ];then
         echo "API Call for existing jobs returned no matches. This means job is alone."
-        if [[ $DEBUG == "true" ]];then
+        if [[ $DEBUG == "1" ]];then
             echo "All running jobs:"
             cat $SHALLOW_JOBSTATUS_PATH || exit 0
             echo "All running jobs with created_at:"
@@ -103,7 +114,7 @@ update_active_run_data(){
 fetch_filtered_active_builds(){
     JOB_API_SUFFIX="?filter=running&shallow=true"
     jobs_api_url_template="${CIRCLECI_BASE_URL}/api/v1.1/project/${VCS_TYPE}/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}${JOB_API_SUFFIX}"
-    if [ "${FILTER_BRANCH}" != "true" ];then
+    if [ "${FILTER_BRANCH}" != "1" ];then
         echo "Orb parameter 'this-branch-only' is false, will block previous builds on any branch." 
     else
         #branch filter
@@ -117,7 +128,6 @@ fetch_filtered_active_builds(){
         cat $TESTING_MOCK_RESPONSE > $SHALLOW_JOBSTATUS_PATH
     else
         fetch "$jobs_api_url_template" "$SHALLOW_JOBSTATUS_PATH"
-        echo "API access successful"
     fi
 
     if [ -n "${CIRCLE_TAG}" ] && [ "$TAG_PATTERN" != "" ]; then
@@ -167,7 +177,9 @@ urlencode(){
 }
 
 fetch(){
-    echo "DEBUG: Making API Call to ${1}"    
+    if [[ $DEBUG == "1" ]];then
+        echo "DEBUG: Making API Call to ${1}"    
+    fi
     url=$1
     target=$2
     http_response=$(curl -s -X GET -H "Circle-Token:${CCI_TOKEN}" -H "Content-Type: application/json" -o "${target}" -w "%{http_code}" "${url}")
@@ -176,7 +188,9 @@ fetch(){
         cat ${target}
         exit 1
     else
-        echo "DEBUG: API Success"
+        if [[ $DEBUG == "1" ]];then
+            echo "DEBUG: API Success"
+        fi
     fi
 }
 
@@ -229,9 +243,9 @@ while true; do
 
     if [ $wait_time -ge $max_time_seconds ]; then
         echo "Max wait time exceeded, fail or force cancel..."
-        if [ "${DONT_QUIT}" == "true" ];then
+        if [ "${DONT_QUIT}" == "1" ];then
             echo "Orb parameter dont-quit is set to true, letting this job proceed!"
-            if [ "${FORCE_CANCEL_PREVIOUS}" == "true" ]; then
+            if [ "${FORCE_CANCEL_PREVIOUS}" == "1" ]; then
                 "FEATURE NOT IMPLEMENTED"
                 exit 1
             fi
