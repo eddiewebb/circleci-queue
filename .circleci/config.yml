@@ -136,8 +136,7 @@ commands:
       - run: 
           name: Install CircleCI CLI (the new one)
           command: |
-            #curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | bash
-            #circleci update
+            curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | sudo bash
             circleci version
             echo "Run circleci help"              
             circleci --help
