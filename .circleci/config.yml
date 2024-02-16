@@ -35,7 +35,7 @@ workflows:
 jobs:
   validate:
     docker:
-      - image: cimg/base:2019.08
+      - image: cimg/base:stable
     working_directory: ~/repo
     steps:
       - checkout
@@ -43,7 +43,7 @@ jobs:
       - pack-and-validate
   test:
     docker:
-      - image: cimg/base:2019.08
+      - image: cimg/base:stable
     working_directory: ~/repo
     steps:
       - checkout
@@ -81,7 +81,7 @@ jobs:
 
   publish:
     docker:
-      - image: cimg/base:2024.01
+      - image: cimg/base:stable
     working_directory: ~/repo
     steps:
       - checkout
@@ -137,7 +137,7 @@ commands:
           name: Install CircleCI CLI (the new one)
           command: |
             #curl https://raw.githubusercontent.com/CircleCI-Public/circleci-cli/master/install.sh --fail --show-error | bash
-            circleci update
+            #circleci update
             circleci version
             echo "Run circleci help"              
             circleci help
