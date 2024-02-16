@@ -141,7 +141,7 @@ commands:
             circleci version
             echo "Run circleci help"              
             circleci --help
-            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > ~/.circleci/cli.yml
+            echo -e "token: ${CIRCLECI_API_KEY}\nverbose: false" > .circleci/cli.yml
   pack-and-validate:
     description: pack directory to single file and validate
     steps:
