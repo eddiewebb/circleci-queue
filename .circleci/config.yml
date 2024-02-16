@@ -123,7 +123,7 @@ commands:
           name: Install BATS (bash testing)
           command: |
             cd /tmp && git clone https://github.com/bats-core/bats-core.git && cd bats-core
-            ./install.sh /usr/local
+            sudo ./install.sh /usr/local
       - run:
           name: Install YQ
           command: |
