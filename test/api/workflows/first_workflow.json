@@ -1,0 +1,7 @@
+{
+  "stopped_at" : null,
+  "name" : "build-deploy",
+  "project_slug" : "test/project",
+  "pipeline_number" : 1,
+  "status" : "running"
+}

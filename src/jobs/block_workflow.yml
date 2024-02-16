@@ -1,5 +1,5 @@
 parameters:
-  consider-branch:
+  this-branch-only:
     type: boolean
     default: true
     description: "Should we only consider jobs running on the same branch?"
@@ -8,7 +8,7 @@ parameters:
     # this is true at JOB level as intention is to block workflow
     default: true
     description: "If true, this job will block until no other workflows with an earlier timestamp are running. Typically used as first job."
-  time:
+  max-wait-time:
     type: string
     default: "10"
     description: "How many minutes to wait before giving up."
@@ -16,18 +16,19 @@ parameters:
     type: boolean
     default: false
     description: "Quitting is for losers. Force job through once time expires instead of failing."
-  only-on-branch:
+  force-cancel-previous:
+    type: boolean
+    default: false
+    description: "No Mercy. Issue cancel commands for any previous competitors (only applies when dont-quit also true)"
+  limit-branch-name:
     type: string
     default: "*"
-    description: "Only queue on specified branch. Default is to enforce serialization on all branches."
-  only-on-workflow:
+    description: "Only apply queue logic on specified branch. "
+  limit-workflow-name:
     type: string
     default: "*"
     description: "Only queue on a specified workflow. Consider combining this with `consider-branch`:`false`."
-  vcs-type:
-    type: string
-    default: "github"
-    description: "Override VCS to 'bitbucket' if needed."
+  # vcs-type --> pipeline.project.type
   confidence:
     type: string
     default: "1"
@@ -36,28 +37,40 @@ parameters:
     type: env_var_name
     default: CIRCLECI_API_KEY
     description: "In case you use a different Environment Variable Name than CIRCLECI_API_KEY, supply it here."
+  tag-pattern:
+    type: string
+    default: ""
+    description: "Set to queue jobs using a regex pattern f.ex '^v[0-9]+\\.[0-9]+\\.[0-9]+$' to filter CIRCLECI_TAG"
   job-regex:
     type: string
     default: ""
-    description: "Allow multiple job names to be blocked until front of line f.ex '^runTests*'"
+    description: "Used to selectively block individual jobs in a workflow. ex '^deploy*'"
   circleci-hostname:
     type: string
     default: "circleci.com"
     description: "For server user to specifiy custom hostname for their server"
+  my-pipeline:
+    type: integer
+  include-debug:
+    type: boolean
+    default: false
+
 
 docker:
   - image: cimg/base:stable
 resource_class: small
 steps:
   - until_front_of_line:
-      consider-branch: <<parameters.consider-branch>>
+      this-branch-only: <<parameters.this-branch-only>>
       block-workflow: <<parameters.block-workflow>>
-      time: <<parameters.time>>
+      max-wait-time: <<parameters.max-wait-time>>
       dont-quit: <<parameters.dont-quit>>
-      only-on-workflow: <<parameters.only-on-workflow>>
-      only-on-branch: <<parameters.only-on-branch>>
-      vcs-type: <<parameters.vcs-type>>
+      limit-workflow-name: <<parameters.limit-workflow-name>>
+      limit-branch-name: <<parameters.limit-branch-name>>
       confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
+      tag-pattern: <<parameters.tag-pattern>>
       job-regex: <<parameters.job-regex>>
       circleci-hostname: <<parameters.circleci-hostname>>
+      my-pipeline: <<parameters.my-pipeline>>
+      include-debug: <<parameters.include-debug>>
