@@ -255,9 +255,12 @@ while true; do
             fi
             exit 0
         else
-            cancel_build_num $CIRCLE_BUILD_NUM
-            sleep 5 # wait for API to cancel this job, rather than showing as failure
-            exit 1 # but just in case, fail job
+            if [ "$FAIL_INSTEAD_OF_CANCEL" != "true" ] ; then
+                cancel_build_num $CIRCLE_BUILD_NUM
+                sleep 5 # wait for API to cancel this job, rather than showing as failure
+                # but just in case, fail job
+            fi
+            exit 1
         fi
     fi
 
