@@ -16,6 +16,10 @@ parameters:
     type: boolean
     default: false
     description: "Quitting is for losers. Force job through once time expires instead of failing."
+  fail-instead-of-cancel:
+    type: boolean
+    default: false
+    description: "Fail this command instead of canceling."
   force-cancel-previous:
     type: boolean
     default: false
@@ -61,16 +65,17 @@ docker:
 resource_class: small
 steps:
   - until_front_of_line:
-      this-branch-only: <<parameters.this-branch-only>>
       block-workflow: <<parameters.block-workflow>>
-      max-wait-time: <<parameters.max-wait-time>>
-      dont-quit: <<parameters.dont-quit>>
-      limit-workflow-name: <<parameters.limit-workflow-name>>
-      limit-branch-name: <<parameters.limit-branch-name>>
-      confidence: <<parameters.confidence>>
       circleci-api-key: <<parameters.circleci-api-key>>
-      tag-pattern: <<parameters.tag-pattern>>
-      job-regex: <<parameters.job-regex>>
       circleci-hostname: <<parameters.circleci-hostname>>
-      my-pipeline: <<parameters.my-pipeline>>
+      confidence: <<parameters.confidence>>
+      dont-quit: <<parameters.dont-quit>>
+      fail-instead-of-cancel: << parameters.fail-instead-of-cancel >>
       include-debug: <<parameters.include-debug>>
+      job-regex: <<parameters.job-regex>>
+      limit-branch-name: <<parameters.limit-branch-name>>
+      limit-workflow-name: <<parameters.limit-workflow-name>>
+      max-wait-time: <<parameters.max-wait-time>>
+      my-pipeline: <<parameters.my-pipeline>>
+      tag-pattern: <<parameters.tag-pattern>>
+      this-branch-only: <<parameters.this-branch-only>>
