@@ -16,6 +16,10 @@ parameters:
     type: boolean
     default: false
     description: "Quitting is for losers. Force job through once time expires instead of failing."
+  fail-instead-of-cancel:
+    type: boolean
+    default: false
+    description: "Fail this command instead of canceling."
   force-cancel-previous:
     type: boolean
     default: false
@@ -62,18 +66,19 @@ steps:
       command: <<include(../scripts/loop.bash)>>
       shell: bash
       environment:  
-        ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
         BLOCK_WORKFLOW: <<parameters.block-workflow>>
-        MAX_TIME: '<<parameters.max-wait-time>>'
-        DONT_QUIT: <<parameters.dont-quit>>
-        FORCE_CANCEL_PREVIOUS: <<parameters.force-cancel-previous>>
-        FILTER_BRANCH: << parameters.this-branch-only >>
-        ONLY_ON_WORKFLOW: <<parameters.limit-workflow-name>>
-        CONFIDENCE_THRESHOLD: <<parameters.confidence>>
         CCI_API_KEY_NAME: << parameters.circleci-api-key >>
-        TAG_PATTERN: <<parameters.tag-pattern>>
-        JOB_REGEXP: <<parameters.job-regex>>
         CIRCLECI_BASE_URL: https://<<parameters.circleci-hostname>>
-        MY_PIPELINE_NUMBER: <<parameters.my-pipeline>>
-        MY_BRANCH: "$CIRCLE_BRANCH"
+        CONFIDENCE_THRESHOLD: <<parameters.confidence>>
         DEBUG: <<parameters.include-debug>>
+        DONT_QUIT: <<parameters.dont-quit>>
+        FAIL_INSTEAD_OF_CANCEL: << parameters.fail-instead-of-cancel >>
+        FILTER_BRANCH: << parameters.this-branch-only >>
+        FORCE_CANCEL_PREVIOUS: <<parameters.force-cancel-previous>>
+        JOB_REGEXP: <<parameters.job-regex>>
+        MAX_TIME: '<<parameters.max-wait-time>>'
+        MY_BRANCH: "$CIRCLE_BRANCH"
+        MY_PIPELINE_NUMBER: <<parameters.my-pipeline>>
+        ONLY_ON_BRANCH: <<parameters.limit-branch-name>>
+        ONLY_ON_WORKFLOW: <<parameters.limit-workflow-name>>
+        TAG_PATTERN: <<parameters.tag-pattern>>
