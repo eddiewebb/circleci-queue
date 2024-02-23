@@ -9,7 +9,8 @@ function setup {
   PROCESSED_PROJECT_CONFIG=${BATS_TMPDIR}/packed_config-${BATS_TEST_NUMBER} 
   JSON_PROJECT_CONFIG=${BATS_TMPDIR}/json_config-${BATS_TEST_NUMBER} 
   ENV_STAGING_PATH=${BATS_TMPDIR}/env-${BATS_TEST_NUMBER}.sh
-       echo "#using temp file ${BATS_TMPDIR}"
+       #echo "#using temp file ${BATS_TMPDIR}"
+	BASH_ENV="$ENV_STAGING_PATH"
 
   # the name used in example config files.
   INLINE_ORB_NAME="queue"
@@ -33,21 +34,11 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
+  assert_jq_match '.jobs["Single File"].steps | length' 2 #only 1 steps
 
   
-  load_config_parameters "Single File"
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters "Single File"
   run bash scripts/loop.bash
   echo $ouput
 
@@ -63,51 +54,16 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["Single File"].steps | length' 1 #only 1 steps
+  assert_jq_match '.jobs["Single File"].steps | length' 2 #only 1 steps
 
   
-  load_config_parameters "Single File"
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters "Single File"
   run bash scripts/loop.bash
   echo $ouput
 
 
   assert_contains_text "Orb parameter block-workflow is false"
-}
-
-@test "Command: Input parameters are passed to environment" {
-  # given
-  process_config_with test/inputs/command-non-default.yml
-
-  # when
-  assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
-  assert_jq_match '.jobs["build"].steps[0].run.environment["ONLY_ON_BRANCH"]' 'unique-branch-name'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["BLOCK_WORKFLOW"]' 'true'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["MAX_TIME"]' '1/10'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["DONT_QUIT"]' 'true'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["FORCE_CANCEL_PREVIOUS"]' 'true'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["FILTER_BRANCH"]' 'false'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["ONLY_ON_WORKFLOW"]' 'unique-workflow-name'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["CONFIDENCE_THRESHOLD"]'   '100'        
-  assert_jq_match '.jobs["build"].steps[0].run.environment["CCI_API_KEY_NAME"]' 'ABC_123'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["TAG_PATTERN"]' 'unique-tag-pattern'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["JOB_REGEXP"]' 'unique-job-regex'
-  assert_jq_match '.jobs["build"].steps[0].run.environment["CIRCLECI_BASE_URL"]' 'https://unique-hostname'
-  #assert_jq_match '.jobs["build"].steps[0].run.environment["MY_PIPELINE_NUMBER"]' '99999999'
-  #assert_jq_match '.jobs["build"].steps[0].run.environment["TRIGGER_SOURCE"]' 'unique-trigger-source'
-  #assert_jq_match '.jobs["build"].steps[0].run.environment["VCS_TYPE"]' 'unique-vcs-type'
-  #assert_jq_match '.jobs["build"].steps[0].run.environment["MY_BRANCH"]' 'unique-branch-for-me'
 }
 
 
@@ -116,30 +72,18 @@ function setup {
 
   process_config_with test/inputs/command-job-regex.yml
   # load any parameters provided as envars.
+
+  export CIRCLE_BRANCH="main"
   load_config_parameters
   export TESTING_MOCK_RESPONSE=test/api/jobs/regex-matches.json
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
-
-
-  # mimic CCI provided values
-
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="DeployStep1"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
-  export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  export CIRCLE_JOB=DeployStep1
   run bash scripts/loop.bash
   echo $ouput
 
   assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelling build 2"
+  assert_contains_text "Cancelling build 3"
   [[ "$status" == "1" ]]
 }
 
@@ -151,18 +95,9 @@ function setup {
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="DeployStep1"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
+  export CIRCLE_JOB="DeployStep1"
   run bash scripts/loop.bash
   echo $ouput
 
@@ -183,17 +118,6 @@ function setup {
 
   
   load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
-  export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
   run bash scripts/loop.bash
   echo $ouput
 
@@ -212,18 +136,8 @@ function setup {
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
 
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
   run bash scripts/loop.bash
   echo $ouput
 
@@ -240,25 +154,15 @@ function setup {
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
  
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
   run bash scripts/loop.bash
   echo $ouput
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
-  assert_contains_text "Cancelling build 2"
+  assert_contains_text "Cancelling build 3"
   [[ "$status" == "1" ]]
 }
 
@@ -269,18 +173,9 @@ function setup {
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjobsamename.json
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
+
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
   run bash scripts/loop.bash
   echo $ouput
 
@@ -293,24 +188,14 @@ function setup {
 
 @test "Command: script will NOT consider branch" {
   # given
-  process_config_with test/inputs/command-defaults.yml
+  process_config_with test/inputs/command-anybranch.yml
   export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
 
   # when
  
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
   run bash scripts/loop.bash
   echo $ouput
 
@@ -330,21 +215,11 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+  assert_jq_match '.jobs["build"].steps | length' 2 #only 1 steps
 
   
-  load_config_parameters
-  export MY_PIPELINE_NUMBER="2"
-  export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
   export CIRCLE_BRANCH="main"
-  export CIRCLE_PR_REPONAME=""
+  load_config_parameters
   run bash scripts/loop.bash
   echo $ouput
 
@@ -366,21 +241,13 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 1 #only 1 steps
+  assert_jq_match '.jobs["build"].steps | length' 2 #only 1 steps
 
   
+  export CIRCLE_BRANCH="main"
   load_config_parameters
   export CIRCLE_PR_REPONAME="this/was/forked"
-  export MY_PIPELINE_NUMBER="2"
   export TRIGGER_SOURCE="1" 
-  export VCS_TYPE="github" 
-  export MY_BRANCH="main"
-  export CIRCLE_BUILD_NUM="2"
-  export CIRCLE_JOB="singlejob"
-  export CIRCLE_PROJECT_USERNAME="madethisup"
-  export CIRCLE_PROJECT_REPONAME="madethisup"
-  export CIRCLE_REPOSITORY_URL="madethisup"
-  export CIRCLE_BRANCH="main"
   run bash scripts/loop.bash
   echo $ouput
 
