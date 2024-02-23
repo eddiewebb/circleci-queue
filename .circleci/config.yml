@@ -166,6 +166,11 @@ commands:
       - run:
           name: Get PR Info
           command: |
-            PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/.*\(#([0-9]*)\).*/\1/p'`
+            #During OPEN PR, get from CCI.
+            PR_NUMBER=${CIRCLE_PULL_REQUEST##*/}
+            if [ -z "$PR)NUMBER" ];then
+              # get from merge commit on closed PR.
+              PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/.*\(#([0-9]*)\).*/\1/p'`
+            fi
             echo "PR_NUMBER is ${PR_NUMBER}"
             echo "export PR_NUMBER=${PR_NUMBER}" >> $BASH_ENV
