@@ -168,7 +168,7 @@ commands:
           command: |
             #During OPEN PR, get from CCI.
             PR_NUMBER=${CIRCLE_PULL_REQUEST##*/}
-            if [ -z "$PR)NUMBER" ];then
+            if [ -z "$PR_NUMBER" ];then
               # get from merge commit on closed PR.
               PR_NUMBER=`git log -1 --pretty=%s  | sed -En 's/.*\(#([0-9]*)\).*/\1/p'`
             fi
