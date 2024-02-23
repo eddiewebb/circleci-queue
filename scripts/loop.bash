@@ -45,7 +45,7 @@ load_variables(){
 
     if [[ $DEBUG != "false" ]];then
      echo "Using Temp Dir: $TMP_DIR"
-     set
+     #set
     fi
 }
 
@@ -109,7 +109,7 @@ update_active_run_data(){
             echo "All running jobs with created_at:"
             cat $AUGMENTED_JOBSTATUS_PATH || exit 0
             echo "All workflow details."
-            cat /tmp/workflow-*.json
+            cat /tmp/workflow-*.json || echo "Could not load workflows.."
             exit 1
         fi
     fi
