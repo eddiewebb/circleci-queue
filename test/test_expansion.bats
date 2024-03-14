@@ -26,6 +26,34 @@ function setup {
 
 }
 
+@test "Bitbucket switch works properly based on VCS" {
+  # given
+  process_config_with test/inputs/command-defaults.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  load_config_parameters
+  export CIRCLE_REPOSITORY_URL="git@bitbucket.org:deedee/deeedee.git"
+  run bash scripts/loop.bash
+  echo $ouput
+
+  assert_contains_text "VCS_TYPE set to bitbucket"
+}
+
+@test "Non Bitbucket switch works properly based on VCS" {
+  # given
+  process_config_with test/inputs/command-defaults.yml
+  export TESTING_MOCK_RESPONSE=test/api/jobs/nopreviousjobs.json
+  export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
+
+  load_config_parameters 
+  export CIRCLE_REPOSITORY_URL="git@bebop.org:deedee/deeedee.git"
+  run bash scripts/loop.bash
+  echo $ouput
+
+  assert_text_not_found "VCS_TYPE set to bitbucket"
+}
+
 @test "Default job sets block workflow properly" {
   # given
   export TESTING_MOCK_RESPONSE=test/api/jobs/onepreviousjob-differentname.json
