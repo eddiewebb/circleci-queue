@@ -21,7 +21,7 @@ load_variables(){
     : ${CIRCLE_REPOSITORY_URL:?"Required Env Variable not found!"}
     : ${CIRCLE_JOB:?"Required Env Variable not found!"}
     VCS_TYPE="github"
-    if [[ "$CIRCLE_REPOSITORY_URL" =~ "*bitbucket.org*" ]]; then
+    if [[ "$CIRCLE_REPOSITORY_URL" =~ .*bitbucket\.org.* ]]; then
         VCS_TYPE="bitbucket"
     fi
     : ${VCS_TYPE:?"Required VCS TYPE not found! This is likely a bug in orb, please report."}
