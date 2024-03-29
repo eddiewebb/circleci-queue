@@ -26,7 +26,6 @@ load_variables(){
         echo "VCS_TYPE set to bitbucket"
     fi
     : ${VCS_TYPE:?"Required VCS TYPE not found! This is likely a bug in orb, please report."}
-    : ${MY_BRANCH:?"Required MY_BRANCH not found! This is likely a bug in orb, please report."}
     : ${MY_PIPELINE_NUMBER:?"Required MY_PIPELINE_NUMBER not found! This is likely a bug in orb, please report."}
     
     # If a pattern is wrapped with slashes, remove them.

@@ -75,7 +75,6 @@ steps:
         echo "export FORCE_CANCEL_PREVIOUS=<<parameters.force-cancel-previous>>" >> $BASH_ENV
         echo "export JOB_REGEXP=\"<<parameters.job-regex>>\"" >> $BASH_ENV
         echo "export MAX_TIME='<<parameters.max-wait-time>>'" >> $BASH_ENV
-        echo "export MY_BRANCH="$CIRCLE_BRANCH"" >> $BASH_ENV
         echo "export MY_PIPELINE_NUMBER=<<parameters.my-pipeline>>" >> $BASH_ENV
         echo "export ONLY_ON_BRANCH=<<parameters.limit-branch-name>>" >> $BASH_ENV
         echo "export ONLY_ON_WORKFLOW=<<parameters.limit-workflow-name>>" >> $BASH_ENV
