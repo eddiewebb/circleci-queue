@@ -6,6 +6,7 @@ description: |
   This orb requires the project to have an **Personal** API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
+  3.1.3: Fix missing branch error when using tags. Issue #126
   3.1.2: Fix github VCS switch (API calls failing) thanks @risinga PR #122
   3.1.1: Boolean fix finally isolated, thanks @@charlescqian
   3.1.0: Force fail, not cancel, when blocked. PR #113, thanks @pguinard-public-com
