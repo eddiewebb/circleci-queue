@@ -54,7 +54,7 @@ parameters:
     default: "circleci.com"
     description: "For server user to specifiy custom hostname for their server"
   my-pipeline:
-    type: integer
+    type: string
   include-debug:
     type: boolean
     default: false
