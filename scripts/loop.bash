@@ -12,7 +12,7 @@ load_variables(){
     : "${MAX_TIME:?"Required Env Variable not found!"}"
     wait_time=0
     loop_time=11
-    max_time_seconds=$(( 60 * $MAX_TIME ))
+    max_time_seconds=$(( 60 * MAX_TIME ))
     # just confirm our required variables are present
     : "${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}"
     : "${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}"
@@ -76,6 +76,9 @@ update_active_run_data(){
     JOB_NAME="$CIRCLE_JOB"
     if [ -n "$JOB_REGEXP" ]; then
         JOB_NAME="$JOB_REGEXP"
+        use_regex=true
+    else
+        use_regex=false
     fi
 
     # falsey parameters are empty strings, so always compare against 'true'
@@ -88,18 +91,24 @@ update_active_run_data(){
         else
             echo "Orb parameter limit-workflow-name is provided."
             echo "This job will block until no previous occurrences of workflow $ONLY_ON_WORKFLOW are running, regardless of job name"
-            oldest_running_build_num=$(jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+            oldest_running_build_num=$(jq ". | map(select(.workflows.workflow_name == \"${ONLY_ON_WORKFLOW}\")) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.workflow_name == \"${ONLY_ON_WORKFLOW}\")) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
         fi
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: $JOB_NAME"
-        oldest_running_build_num=$(jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-        front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+        if [ "$use_regex" = true ]; then
+            oldest_running_build_num=$(jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\"; \"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\"; \"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+        else
+            oldest_running_build_num=$(jq ". | map(select(.workflows.job_name == \"${JOB_NAME}\")) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name == \"${JOB_NAME}\")) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+        fi
         if [[ "$DEBUG" != "false" ]]; then
             echo "DEBUG: me: $MY_PIPELINE_NUMBER, front: $front_of_queue_pipeline_number"
         fi
     fi
+
     if [ -z "$front_of_queue_pipeline_number" ]; then
         echo "API Call for existing jobs returned no matches. This means job is alone."
         if [[ $DEBUG != "false" ]]; then
