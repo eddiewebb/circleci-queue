@@ -75,7 +75,7 @@ jobs:
             TITLE=`curl -u eddiewebb:${GHI_TOKEN} "https://api.github.com/repos/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}/issues/${PR_NUMBER}" | jq '.title' `
             SEMVER_INCREMENT=`echo $TITLE | sed -En 's/.*\[semver:(major|minor|patch|skip)\].*/\1/p'`
             if [ -z ${SEMVER_INCREMENT} ];then
-              echo "Merge commit did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
+              echo "The **source PR** did not indicate which SemVer increment to make. Please ammend commit with [semver:FOO] where FOO is major, minor, or patch"
               exit 1
             fi         
 
