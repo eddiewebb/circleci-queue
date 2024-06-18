@@ -91,18 +91,18 @@ update_active_run_data(){
         else
             echo "Orb parameter limit-workflow-name is provided."
             echo "This job will block until no previous occurrences of workflow $ONLY_ON_WORKFLOW are running, regardless of job name"
-            oldest_running_build_num=$(jq ". | map(select(.workflows.workflow_name == \"${ONLY_ON_WORKFLOW}\")) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.workflow_name == \"${ONLY_ON_WORKFLOW}\")) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+            oldest_running_build_num=$(jq --arg ONLY_ON_WORKFLOW "$ONLY_ON_WORKFLOW" '. | map(select(.workflows.workflow_name == $ONLY_ON_WORKFLOW)) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg ONLY_ON_WORKFLOW "$ONLY_ON_WORKFLOW" '. | map(select(.workflows.workflow_name == $ONLY_ON_WORKFLOW)) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
         fi
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: $JOB_NAME"
         if [ "$use_regex" = true ]; then
-            oldest_running_build_num=$(jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\"; \"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\"; \"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+            oldest_running_build_num=$(jq --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name | test($JOB_NAME; "sx"))) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name | test($JOB_NAME; "sx"))) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
         else
-            oldest_running_build_num=$(jq ". | map(select(.workflows.job_name == \"${JOB_NAME}\")) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name == \"${JOB_NAME}\")) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+            oldest_running_build_num=$(jq --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name == $JOB_NAME)) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name == $JOB_NAME)) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
         fi
         if [[ "$DEBUG" != "false" ]]; then
             echo "DEBUG: me: $MY_PIPELINE_NUMBER, front: $front_of_queue_pipeline_number"
@@ -122,6 +122,7 @@ update_active_run_data(){
         fi
     fi
 }
+
 
 fetch_filtered_active_builds(){
     JOB_API_SUFFIX="?filter=running&shallow=true"
