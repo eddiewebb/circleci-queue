@@ -12,7 +12,7 @@ load_variables(){
     : "${MAX_TIME:?"Required Env Variable not found!"}"
     wait_time=0
     loop_time=11
-    max_time_seconds=$(( 60 * MAX_TIME ))
+    max_time_seconds=$(( 60 * $MAX_TIME ))
     # just confirm our required variables are present
     : "${CIRCLE_BUILD_NUM:?"Required Env Variable not found!"}"
     : "${CIRCLE_PROJECT_USERNAME:?"Required Env Variable not found!"}"
