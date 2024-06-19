@@ -76,6 +76,9 @@ update_active_run_data(){
     JOB_NAME="$CIRCLE_JOB"
     if [ -n "$JOB_REGEXP" ]; then
         JOB_NAME="$JOB_REGEXP"
+        use_regex=true
+    else
+        use_regex=false
     fi
 
     # falsey parameters are empty strings, so always compare against 'true'
@@ -88,18 +91,24 @@ update_active_run_data(){
         else
             echo "Orb parameter limit-workflow-name is provided."
             echo "This job will block until no previous occurrences of workflow $ONLY_ON_WORKFLOW are running, regardless of job name"
-            oldest_running_build_num=$(jq ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-            front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.workflow_name| test(\"${ONLY_ON_WORKFLOW}\";\"sx\"))) | sort_by(.workflows.pipeline_number)| .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+            oldest_running_build_num=$(jq --arg ONLY_ON_WORKFLOW "$ONLY_ON_WORKFLOW" '. | map(select(.workflows.workflow_name == $ONLY_ON_WORKFLOW)) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg ONLY_ON_WORKFLOW "$ONLY_ON_WORKFLOW" '. | map(select(.workflows.workflow_name == $ONLY_ON_WORKFLOW)) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
         fi
     else
         echo "Orb parameter block-workflow is false. Use Job level queueing."
         echo "Only blocking execution if running previous jobs matching this job: $JOB_NAME"
-        oldest_running_build_num=$(jq ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].build_num" "$AUGMENTED_JOBSTATUS_PATH")
-        front_of_queue_pipeline_number=$(jq -r ". | map(select(.workflows.job_name | test(\"${JOB_NAME}\";\"sx\"))) | sort_by(.workflows.pipeline_number)|  .[0].workflows.pipeline_number // empty" "$AUGMENTED_JOBSTATUS_PATH")
+        if [ "$use_regex" = true ]; then
+            oldest_running_build_num=$(jq --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name | test($JOB_NAME; "sx"))) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name | test($JOB_NAME; "sx"))) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
+        else
+            oldest_running_build_num=$(jq --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name == $JOB_NAME)) | sort_by(.workflows.pipeline_number) | .[0].build_num' "$AUGMENTED_JOBSTATUS_PATH")
+            front_of_queue_pipeline_number=$(jq -r --arg JOB_NAME "$JOB_NAME" '. | map(select(.workflows.job_name == $JOB_NAME)) | sort_by(.workflows.pipeline_number) | .[0].workflows.pipeline_number // empty' "$AUGMENTED_JOBSTATUS_PATH")
+        fi
         if [[ "$DEBUG" != "false" ]]; then
             echo "DEBUG: me: $MY_PIPELINE_NUMBER, front: $front_of_queue_pipeline_number"
         fi
     fi
+
     if [ -z "$front_of_queue_pipeline_number" ]; then
         echo "API Call for existing jobs returned no matches. This means job is alone."
         if [[ $DEBUG != "false" ]]; then
@@ -113,6 +122,7 @@ update_active_run_data(){
         fi
     fi
 }
+
 
 fetch_filtered_active_builds(){
     JOB_API_SUFFIX="?filter=running&shallow=true"
@@ -222,8 +232,11 @@ while true; do
 
     echo "This Job's Pipeline #: $MY_PIPELINE_NUMBER"
     echo "Front of Queue (fifo) Pipeline #: $front_of_queue_pipeline_number"
-
-    if [[ -z "$front_of_queue_pipeline_number" ]] || [[ -n "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]]; then
+    # This condition checks if the current job should proceed based on confidence level:
+    # 1. If 'front_of_queue_pipeline_number' is empty, it means there are no other jobs in the queue, so the current job can proceed.
+    # 2. If 'MY_PIPELINE_NUMBER' is non-empty and equals 'front_of_queue_pipeline_number', it means the current job is at the front of the queue and can proceed.
+    # Confidence level is incremented if either of these conditions is true.
+    if [[ -z "$front_of_queue_pipeline_number" ]] || ([[ -n "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]]); then
         # recent-jobs API does not include pending, so it is possible we queried in between a workflow transition, and we're NOT really front of line.
         if [ $confidence -lt "$CONFIDENCE_THRESHOLD" ]; then
             # To grow confidence, we check again with a delay.
