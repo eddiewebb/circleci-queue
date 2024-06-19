@@ -232,8 +232,11 @@ while true; do
 
     echo "This Job's Pipeline #: $MY_PIPELINE_NUMBER"
     echo "Front of Queue (fifo) Pipeline #: $front_of_queue_pipeline_number"
-
-    if [[ -z "$front_of_queue_pipeline_number" ]] || [[ -n "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]]; then
+    # This condition checks if the current job should proceed based on confidence level:
+    # 1. If 'front_of_queue_pipeline_number' is empty, it means there are no other jobs in the queue, so the current job can proceed.
+    # 2. If 'MY_PIPELINE_NUMBER' is non-empty and equals 'front_of_queue_pipeline_number', it means the current job is at the front of the queue and can proceed.
+    # Confidence level is incremented if either of these conditions is true.
+    if [[ -z "$front_of_queue_pipeline_number" ]] || ([[ -n "$MY_PIPELINE_NUMBER" ]] && [[ "$front_of_queue_pipeline_number" == "$MY_PIPELINE_NUMBER" ]]); then
         # recent-jobs API does not include pending, so it is possible we queried in between a workflow transition, and we're NOT really front of line.
         if [ $confidence -lt "$CONFIDENCE_THRESHOLD" ]; then
             # To grow confidence, we check again with a delay.
