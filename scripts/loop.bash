@@ -186,22 +186,55 @@ urlencode(){
     export LC_ALL="${LC_WAS}"
 }
 
-fetch(){
-    if [[ $DEBUG != "false" ]]; then
-        echo "DEBUG: Making API Call to ${1}"
-    fi
-    url="$1"
-    target="$2"
-    http_response=$(curl -s -X GET -H "Circle-Token:${CCI_TOKEN}" -H "Content-Type: application/json" -o "${target}" -w "%{http_code}" "${url}")
-    if [ "$http_response" != "200" ]; then
-        echo "ERROR: Server returned error code: $http_response"
-        cat "${target}"
-        exit 1
-    else
+fetch() {
+    local max_retries=5
+    local retry_count=0
+    local backoff=1
+
+    while : ; do
         if [[ $DEBUG != "false" ]]; then
-            echo "DEBUG: API Success"
+            echo "DEBUG: Making API Call to ${1}"
         fi
-    fi
+        url="$1"
+        target="$2"
+
+        response_headers=$(mktemp)
+        http_response=$(curl -s -X GET -H "Circle-Token:${CCI_TOKEN}" -H "Content-Type: application/json" -D "$response_headers" -o "${target}" -w "%{http_code}" "${url}")
+
+        if [ "$http_response" -eq 200 ]; then
+            if [[ $DEBUG != "false" ]]; then
+                echo "DEBUG: API Success"
+            fi
+            rm -f "$response_headers"
+            return 0
+        elif [ "$http_response" -eq 429 ]; then
+            retry_after=$(grep -i "Retry-After:" "$response_headers" | awk '{print $2}' | tr -d '\r')
+            if [[ -n "$retry_after" ]]; then
+                sleep_duration=$((retry_after))
+            else
+                sleep_duration=$((backoff))
+                backoff=$((backoff * 2))
+            fi
+
+            if (( retry_count >= max_retries )); then
+                echo "ERROR: Maximum retries reached. Exiting."
+                rm -f "$response_headers"
+                cat "${target}"
+                exit 1
+            fi
+
+            if [[ $DEBUG != "false" ]]; then
+                echo "DEBUG: Rate limit exceeded. Retrying in $sleep_duration seconds..."
+            fi
+            sleep "$sleep_duration"
+            ((retry_count++))
+        else
+            echo "ERROR: Server returned error code: $http_response"
+            rm -f "$response_headers"
+            cat "${target}"
+            exit 1
+        fi
+    done
 }
 
 
