@@ -31,7 +31,7 @@ parameters:
   limit-workflow-name:
     type: string
     default: "*"
-    description: "Only queue on a specified workflow. Consider combining this with `consider-branch`:`false`."
+    description: "Only queue on a specified workflow. Consider combining this with `this-branch-only`:`false`."
   # vcs-type --> pipeline.project.type
   confidence:
     type: string
