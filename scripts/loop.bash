@@ -10,7 +10,7 @@ load_variables(){
     AUGMENTED_JOBSTATUS_PATH="$TMP_DIR/augmented_jobstatus.json"
     echo "Block: $BLOCK_WORKFLOW"
     : "${MAX_TIME:?"Required Env Variable not found!"}"
-    wait_time=0
+    start_time=$(date +%s)
     loop_time=11
     max_time_seconds=$(( 60 * $MAX_TIME ))
     # just confirm our required variables are present
@@ -246,6 +246,15 @@ cancel_build_num(){
 }
 
 
+get_wait_time() {
+    local current_time
+    current_time=$(date +%s)
+    echo "$((current_time - start_time))"
+}
+
+
+
+
 
 
 
@@ -283,12 +292,14 @@ while true; do
     else
         # If we fail, reset confidence
         confidence=0
+        wait_time=$(get_wait_time)
         echo "This build (${CIRCLE_BUILD_NUM}), pipeline (${MY_PIPELINE_NUMBER}) is queued, waiting for build(${oldest_running_build_num}) pipeline (${front_of_queue_pipeline_number}) to complete."
         echo "Total Queue time: ${wait_time} seconds."
     fi
 
+    wait_time=$(get_wait_time)
     if [ $wait_time -ge $max_time_seconds ]; then
-        echo "Max wait time exceeded, fail or force cancel..."
+        echo "Max wait time exceeded. waited=$wait_time max=$max_time_seconds. Fail or force cancel..."
         if [ "${DONT_QUIT}" != "false" ]; then
             echo "Orb parameter dont-quit is set to true, letting this job proceed!"
             if [ "${FORCE_CANCEL_PREVIOUS}" != "false" ]; then
@@ -307,6 +318,5 @@ while true; do
     fi
 
     sleep $loop_time
-    wait_time=$(( loop_time + wait_time ))
 done
 
