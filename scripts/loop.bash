@@ -4,6 +4,10 @@
 # This script uses many environment variables, some set from pipeline parameters. See orb yaml for source.
 #
 
+echo(){ # add UTC timestamps to echo
+    command echo "$(date -u '+%Y-%m-%d %H:%M:%S UTC')" -- "$@"
+}
+
 load_variables(){
     TMP_DIR=$(mktemp -d)
     SHALLOW_JOBSTATUS_PATH="$TMP_DIR/jobstatus.json"
