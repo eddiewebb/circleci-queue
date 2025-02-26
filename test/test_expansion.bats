@@ -35,7 +35,7 @@ function setup {
   load_config_parameters
   export CIRCLE_REPOSITORY_URL="git@bitbucket.org:deedee/deeedee.git"
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
   assert_contains_text "VCS_TYPE set to bitbucket"
 }
@@ -49,7 +49,7 @@ function setup {
   load_config_parameters 
   export CIRCLE_REPOSITORY_URL="git@bebop.org:deedee/deeedee.git"
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
   assert_text_not_found "VCS_TYPE set to bitbucket"
 }
@@ -68,7 +68,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters "Single File"
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Orb parameter block-workflow is true."
@@ -88,7 +88,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters "Single File"
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Orb parameter block-workflow is false"
@@ -107,7 +107,7 @@ function setup {
   export TESTING_MOCK_WORKFLOW_RESPONSES=test/api/workflows
   export CIRCLE_JOB=DeployStep1
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
   assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Max wait time exceeded"
@@ -127,7 +127,7 @@ function setup {
   load_config_parameters
   export CIRCLE_JOB="DeployStep1"
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
@@ -147,7 +147,7 @@ function setup {
   
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
@@ -167,7 +167,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
@@ -185,7 +185,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
@@ -205,7 +205,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Max Queue Time: 6 seconds"
@@ -225,7 +225,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
   assert_contains_text "Max Queue Time: 6 seconds"
   assert_contains_text "Orb parameter 'this-branch-only' is false, will block previous builds on any branch"
@@ -249,7 +249,7 @@ function setup {
   export CIRCLE_BRANCH="main"
   load_config_parameters
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "${CIRCLE_BRANCH} matches queueable branch names"
@@ -277,7 +277,7 @@ function setup {
   export CIRCLE_PR_REPONAME="this/was/forked"
   export TRIGGER_SOURCE="1" 
   run bash scripts/loop.bash
-  echo $ouput
+  echo $output
 
 
   assert_contains_text "Queueing on forks is not supported. Skipping queue..."
