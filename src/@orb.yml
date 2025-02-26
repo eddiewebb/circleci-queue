@@ -6,6 +6,7 @@ description: |
   This orb requires the project to have an **Personal** API key in order to query build states.
   It requires a single environment variable CIRCLECI_API_KEY which can be created in account settings - https://circleci.com/account/api.
 
+  3.3.0: Add timestamps to output, PR#139, thanks @jordan-brough
   3.2.1: Docs improvement, PR #136 Thanks @RainOfTerra
   3.2.0: Adds back-off support to handle 429 throttling from new API. PR #134  Thanks @rainofterra
   3.1.6: Fix #128 again, this time on JQ side. PR #133 Thanks @RainOfTerra
