@@ -62,7 +62,7 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["Single File"].steps | length' 2 #only 1 steps
+  assert_jq_match '.jobs["Single File"].steps | length' 3 #only 1 steps
 
   
   export CIRCLE_BRANCH="main"
@@ -82,7 +82,7 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["Single File"].steps | length' 2 #only 1 steps
+  assert_jq_match '.jobs["Single File"].steps | length' 3 #only 1 steps
 
   
   export CIRCLE_BRANCH="main"
@@ -243,7 +243,7 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 2 #only 1 steps
+  assert_jq_match '.jobs["build"].steps | length' 3 #only 1 steps
 
   
   export CIRCLE_BRANCH="main"
@@ -269,7 +269,7 @@ function setup {
 
   # when
   assert_jq_match '.jobs | length' 1 #only 1 job
-  assert_jq_match '.jobs["build"].steps | length' 2 #only 1 steps
+  assert_jq_match '.jobs["build"].steps | length' 3 #only 1 steps
 
   
   export CIRCLE_BRANCH="main"

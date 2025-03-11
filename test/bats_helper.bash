@@ -97,7 +97,7 @@ function assert_jq_contains {
 function load_config_parameters {
 	NAME="${1:-build}"
 	#echo $JSON_PROJECT_CONFIG > $ENV_STAGING_PATH
-	jq -r '.jobs["'"${NAME}"'"].steps[0].run.command' $JSON_PROJECT_CONFIG > $ENV_STAGING_PATH-input
+	jq -r '.jobs["'"${NAME}"'"].steps[1].run.command' $JSON_PROJECT_CONFIG > $ENV_STAGING_PATH-input
 	>$ENV_STAGING_PATH
 	export BASH_ENV=$ENV_STAGING_PATH
 	export CIRCLE_BRANCH="main"
