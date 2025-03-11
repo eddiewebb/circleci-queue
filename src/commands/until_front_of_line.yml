@@ -62,6 +62,10 @@ parameters:
 
 steps:
   - run:
+      name: Queueing Orb Deprecation Notice  - !! IMPORTANT !!
+      command: <<include(../scripts/goodbye.bash)>>
+      shell: bash
+  - run:
       name: 'Queue - Import Parameters'
       command: |
         echo "export BLOCK_WORKFLOW=<<parameters.block-workflow>>" >> $BASH_ENV
