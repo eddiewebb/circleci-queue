@@ -28,7 +28,7 @@ echo -e "${GREEN}Good News!${NC}"
 echo -e "
 This orb was first authored in 2018, and has served over 10,000,000 builds. 
 
-${BOLD}But as of March, 2025, it is not longer supported${ENDBOLD} as CircleCI now supports native 
+${BOLD}But as of March, 2025, it is no longer supported${ENDBOLD} as CircleCI now supports native 
 serialization. ${RED}
 - The author will no longer accept enhancement requests effectively immediately.
 - The CircleCI team is planning to remove v1 APIs used by this orb in the future.${NC}
