@@ -1,3 +1,7 @@
+> **This Orb is deprecated by native CircleCI functionality.**
+>
+> For details, see the [Deprecation Notice issue](https://github.com/eddiewebb/circleci-queue/issues/142) and the official [CircleCI changelog entry](https://circleci.com/changelog/avoid-commit-conflicts-in-your-pipelines-with-serial-jobs/) for `serial-group`.
+
 # CircleCI Concurrency Control Orb
 
 [![CircleCI](https://img.shields.io/circleci/build/gh/eddiewebb/circleci-queue)](https://circleci.com/gh/eddiewebb/circleci-queue/tree/master) 
